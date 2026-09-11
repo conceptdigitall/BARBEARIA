@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Hero from './Hero';
 import About from './About';
-import Gallery from './Gallery';
+import Gallery from './Gallery'; // Keep import in case it is used elsewhere or remove if unused, let's keep it clean
+import InstagramCarousel from './InstagramCarousel';
 import Services from './Services';
 import BookingForm from './BookingForm';
 import Location from './Location';
+import WhatsAppFloatingButton from './WhatsAppFloatingButton';
 
 interface Service {
   id: string;
@@ -73,12 +75,6 @@ export default function LandingPageWrapper({ services, siteConfig }: LandingPage
       {/* Hero Section */}
       <Hero onBookingClick={handleBookingClick} heroName={siteConfig.heroName} />
 
-      {/* About Us / Philosophy Section */}
-      <About />
-
-      {/* Styles Gallery Section */}
-      <Gallery galleryUrls={siteConfig.galleryUrls} />
-
       {/* Services & Pricing Section */}
       <Services services={services} onSelectService={handleSelectService} />
 
@@ -89,12 +85,21 @@ export default function LandingPageWrapper({ services, siteConfig }: LandingPage
         onClearSelection={handleClearSelection}
       />
 
+      {/* Instagram Carousel Section */}
+      <InstagramCarousel />
+
       {/* Location Section */}
       <Location 
         address={siteConfig.address} 
         instagram={siteConfig.instagram} 
         whatsapp={siteConfig.whatsapp} 
       />
+
+      {/* About Us / Philosophy Section (Mapeado por último) */}
+      <About />
+
+      {/* Floating WhatsApp Button */}
+      <WhatsAppFloatingButton phone={siteConfig.whatsapp} />
 
       {/* Premium Footer */}
       <footer className="bg-black text-white/50 pt-20 pb-10 border-t border-graphite-border/40 px-6">

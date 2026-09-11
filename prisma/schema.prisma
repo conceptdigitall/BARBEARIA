@@ -104,6 +104,8 @@ model Appointment {
   
   serviceId      String
   service        Service           @relation(fields: [serviceId], references: [id])
+  
+  additionalServices Json?
 }
 
 model Availability {
@@ -113,6 +115,7 @@ model Availability {
   endTime      String
   breakStart   String?
   breakEnd     String?
+  isActive     Boolean       @default(true)
   
   barberId     String
   barber       User          @relation(fields: [barberId], references: [id])

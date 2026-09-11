@@ -64,6 +64,7 @@ export default async function AdminDashboardPage() {
       name: app.service.name,
       price: Number(app.service.price),
     },
+    additionalServices: app.additionalServices ? (app.additionalServices as any) : null,
   }));
 
   // Fetch Tenant data for CMS and analytics

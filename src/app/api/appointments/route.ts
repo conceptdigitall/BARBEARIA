@@ -55,12 +55,15 @@ export async function GET(request: Request) {
     const barbers = await prisma.user.findMany({
       where: {
         tenantId: tenant.id,
-        role: 'OWNER',
         isActive: true,
+        ...(barberId ? { id: barberId } : { role: 'OWNER' }),
       },
       include: {
         availabilities: {
-          where: { dayOfWeek },
+          where: { 
+            dayOfWeek,
+            isActive: true,
+          },
         },
       },
     });
@@ -137,7 +140,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { serviceId, barberId, date, time, clientName, clientPhone } = body;
+    const { serviceId, barberId, date, time, clientName, clientPhone, additionalServices } = body;
 
     if (!serviceId || !date || !time || !clientName || !clientPhone) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
@@ -205,6 +208,7 @@ export async function POST(request: Request) {
         clientId: client.id,
         barberId: targetBarberId,
         serviceId,
+        additionalServices: additionalServices || null,
         tenantId: tenant.id,
         status: AppointmentStatus.PENDING_CONFIRMATION,
       },
@@ -217,8 +221,13 @@ export async function POST(request: Request) {
 
     // 5. Simulate WhatsApp Message Dispatch
     console.log(`[WhatsApp API Simulation] Sending message to ${clientPhone}:`);
+    const serviceNames = [
+      appointment.service.name,
+      ...(additionalServices ? (additionalServices as any[]).map(s => s.name) : [])
+    ].join(', ');
+    
     console.log(
-      `Fala, ${clientName}! 🇩🇪 Seu horário com o barbeiro ${appointment.barber.name} para o serviço ${appointment.service.name} está pré-reservado para ${date} às ${time}. Confirme seu agendamento no link: http://localhost:3000/confirm/${appointment.id}`
+      `Fala, ${clientName}! 🇩🇪 Seu horário com o barbeiro ${appointment.barber.name} para o(s) serviço(s) ${serviceNames} está pré-reservado para ${date} às ${time}. Confirme seu agendamento no link: http://localhost:3000/confirm/${appointment.id}`
     );
 
     return NextResponse.json({ success: true, appointment });

@@ -27,7 +27,8 @@ export default function BookingForm({
   const [success, setSuccess] = useState(false);
 
   // Form State
-  const [serviceId, setServiceId] = useState<string>('');
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const serviceId = selectedServices[0]?.id || '';
   const [barberId, setBarberId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -49,13 +50,49 @@ export default function BookingForm({
     }).format(value);
   };
 
+  // Fetch default barber on mount to solve block
+  useEffect(() => {
+    const fetchBarber = async () => {
+      try {
+        const res = await fetch('/api/barbers');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.barbers && data.barbers.length > 0) {
+            setBarberId(data.barbers[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching barbers:', err);
+      }
+    };
+    fetchBarber();
+  }, []);
+
   // Pre-select service if passed from parent
   useEffect(() => {
     if (selectedServiceId) {
-      setServiceId(selectedServiceId);
-      setStep(2); // Go directly to step 2 (Barber & Time)
+      const s = services.find(x => x.id === selectedServiceId);
+      if (s) {
+        setSelectedServices([s]);
+        setStep(2); // Go directly to step 2 (Barber & Time)
+      }
     }
-  }, [selectedServiceId]);
+  }, [selectedServiceId, services]);
+
+  const handleToggleService = (service: Service) => {
+    setSelectedServices(prev => {
+      const exists = prev.some(s => s.id === service.id);
+      if (exists) {
+        return prev.filter(s => s.id !== service.id);
+      } else {
+        if (prev.length >= 3) {
+          alert('Você pode selecionar no máximo 3 serviços.');
+          return prev;
+        }
+        return [...prev, service];
+      }
+    });
+  };
 
   // Generate next 7 working days (excluding Sundays)
   useEffect(() => {
@@ -130,6 +167,13 @@ export default function BookingForm({
     setLoading(true);
     try {
       const formattedPhone = `+55${phone.replace(/\D/g, '')}`;
+      const additionalServicesPayload = selectedServices.slice(1).map(s => ({
+        id: s.id,
+        name: s.name,
+        price: Number(s.price),
+        durationMin: s.durationMin,
+      }));
+
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,6 +184,7 @@ export default function BookingForm({
           time: selectedTime,
           clientName: name,
           clientPhone: formattedPhone,
+          additionalServices: additionalServicesPayload,
         }),
       });
 
@@ -148,7 +193,7 @@ export default function BookingForm({
         // Clear state
         setName('');
         setPhone('');
-        setServiceId('');
+        setSelectedServices([]);
         setBarberId('');
         setSelectedTime('');
         onClearSelection();
@@ -240,34 +285,50 @@ export default function BookingForm({
             {/* STEP 1: SERVICE SELECTION */}
             {step === 1 && (
               <div className="space-y-4">
-                <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
-                  Selecione o Serviço
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
+                    Selecione os Serviços (Máx. 3)
+                  </label>
+                  <span className="text-[10px] text-white/40 font-semibold uppercase">
+                    {selectedServices.length} / 3 Selecionados
+                  </span>
+                </div>
                 <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 scrollbar-none">
-                  {services.map((service) => (
-                    <div
-                      key={service.id}
-                      onClick={() => setServiceId(service.id)}
-                      className={`p-4 border cursor-pointer transition-all duration-300 flex justify-between items-center ${
-                        serviceId === service.id
-                          ? 'border-gold-primary bg-gold-primary/5'
-                          : 'border-graphite-border bg-graphite-light/40 hover:border-white/20'
-                      }`}
-                    >
-                      <div>
-                        <h4 className="font-serif font-bold text-sm text-white uppercase tracking-wide">{service.name}</h4>
-                        <span className="text-[10px] text-white/40 font-light">{service.durationMin} min</span>
+                  {services.map((service) => {
+                    const isSelected = selectedServices.some(s => s.id === service.id);
+                    return (
+                      <div
+                        key={service.id}
+                        onClick={() => handleToggleService(service)}
+                        className={`p-4 border cursor-pointer transition-all duration-300 flex justify-between items-center ${
+                          isSelected
+                            ? 'border-gold-primary bg-gold-primary/5'
+                            : 'border-graphite-border bg-graphite-light/40 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            readOnly
+                            className="w-4 h-4 accent-gold-primary rounded border-graphite-border cursor-pointer"
+                          />
+                          <div>
+                            <h4 className="font-serif font-bold text-sm text-white uppercase tracking-wide">{service.name}</h4>
+                            <span className="text-[10px] text-white/40 font-light">{service.durationMin} min</span>
+                          </div>
+                        </div>
+                        <span className="font-extrabold text-gold-primary text-sm">
+                          {formatPrice(service.price)}
+                        </span>
                       </div>
-                      <span className="font-extrabold text-gold-primary text-sm">
-                        {formatPrice(service.price)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <button
                   type="button"
-                  disabled={!serviceId}
+                  disabled={selectedServices.length === 0}
                   onClick={() => setStep(2)}
                   className="w-full py-4 mt-4 bg-gold-primary disabled:bg-gold-primary/10 disabled:text-white/20 hover:bg-gold-hover text-black font-bold text-xs tracking-wider uppercase transition-all duration-300"
                 >
@@ -364,13 +425,24 @@ export default function BookingForm({
               <div className="space-y-6">
                 {/* Booking Summary */}
                 <div className="p-4 bg-graphite-light/60 border border-graphite-border/60 space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-white/40 font-light">Serviço:</span>
-                    <span className="text-white font-bold uppercase tracking-wide font-serif">{selectedService?.name}</span>
+                  <div className="space-y-1">
+                    <span className="text-white/40 font-light block">Serviços Selecionados:</span>
+                    {selectedServices.map(s => (
+                      <div key={s.id} className="flex justify-between font-serif text-xs font-bold text-white uppercase tracking-wide">
+                        <span>{s.name}</span>
+                        <span>{formatPrice(s.price)}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between border-t border-graphite-border/30 pt-2">
                     <span className="text-white/40 font-light">Profissional:</span>
                     <span className="text-white font-bold">Alemão</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40 font-light">Duração Total:</span>
+                    <span className="text-white font-bold">
+                      {selectedServices.reduce((sum, s) => sum + s.durationMin, 0)} min
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/40 font-light">Data e Hora:</span>
@@ -384,7 +456,9 @@ export default function BookingForm({
                   </div>
                   <div className="border-t border-graphite-border/60 pt-2 flex justify-between font-extrabold text-sm">
                     <span className="text-white/70 font-serif">Total:</span>
-                    <span className="text-gold-primary">{selectedService ? formatPrice(selectedService.price) : ''}</span>
+                    <span className="text-gold-primary">
+                      {formatPrice(selectedServices.reduce((sum, s) => sum + s.price, 0))}
+                    </span>
                   </div>
                 </div>
 

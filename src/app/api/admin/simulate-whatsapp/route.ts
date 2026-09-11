@@ -35,7 +35,12 @@ export async function POST(request: Request) {
     });
 
     // Generate the WhatsApp message template
-    const message = `Fala, ${appointment.client.name}! 🇩🇪 Seu horário com o barbeiro *${appointment.barber.name}* para o serviço *${appointment.service.name}* está confirmado para hoje às *${timeStr}*?
+    const serviceNames = [
+      appointment.service.name,
+      ...(appointment.additionalServices ? (appointment.additionalServices as any[]).map(s => s.name) : [])
+    ].join(', ');
+
+    const message = `Fala, ${appointment.client.name}! 🇩🇪 Seu horário com o barbeiro *${appointment.barber.name}* para o(s) serviço(s) *${serviceNames}* está confirmado para hoje às *${timeStr}*?
 
 Responda *1* para Confirmar ou *2* para Cancelar/Reagendar.`;
 
