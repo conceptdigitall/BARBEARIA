@@ -5678,8 +5678,10 @@ COMMENT ON COLUMN messages.error_details IS
 -- SEED PERSONALIZADO: BARBEARIA DO ALEMÃO 777 (KAWE)
 -- ============================================================
 
--- Garante que owner_user_id não force NOT NULL se a tabela já existia antes
+-- Garante que constraints legadas de user_id/owner_user_id não causem erros no seed
 ALTER TABLE public.accounts ALTER COLUMN owner_user_id DROP NOT NULL;
+ALTER TABLE public.pipelines ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE public.message_templates ALTER COLUMN user_id DROP NOT NULL;
 
 DO $$
 DECLARE
@@ -5736,15 +5738,17 @@ BEGIN
       account_role = 'owner';
   END IF;
 
-  -- 6. Inserir ou atualizar Pipeline Oficial vinculado à conta v_account_id
-  INSERT INTO public.pipelines (id, account_id, name, created_at)
+  -- 6. Inserir ou atualizar Pipeline Oficial vinculado à conta v_account_id e user_id
+  INSERT INTO public.pipelines (id, user_id, account_id, name, created_at)
   VALUES (
     v_pipeline_id,
+    v_user_id,
     v_account_id,
     'Funil de Vendas - Barbearia do Alemão 777',
     NOW()
   )
   ON CONFLICT (id) DO UPDATE SET
+    user_id = COALESCE(EXCLUDED.user_id, public.pipelines.user_id),
     account_id = v_account_id,
     name = EXCLUDED.name;
 
@@ -5764,7 +5768,7 @@ BEGIN
 
   -- 8. Inserir Modelos de Mensagem WhatsApp para a Barbearia (colunas: body_text, status)
   DELETE FROM public.message_templates
-  WHERE account_id = v_account_id
+  WHERE (account_id = v_account_id OR (v_user_id IS NOT NULL AND user_id = v_user_id))
     AND name IN ('confirmacao_agendamento', 'lembrete_retorno', 'lembrete_24h_antes', 'combo_promocional_90');
 
   INSERT INTO public.message_templates (id, account_id, user_id, name, category, language, body_text, status, created_at, updated_at)
@@ -5777,7 +5781,7 @@ BEGIN
       'Utility',
       'pt_BR',
       'Fala {{1}}! Confirmando seu agendamento de {{2}} para hoje às {{3}} na Barbearia do Alemão 777. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão. Qualquer imprevisto nos avise por aqui!',
-      'Approved',
+      'APPROVED',
       NOW(),
       NOW()
     ),
@@ -5789,7 +5793,7 @@ BEGIN
       'Marketing',
       'pt_BR',
       'Fala {{1}}! Já faz {{2}} dias desde seu último corte aqui na Barbearia do Alemão 777. Que tal mantermos o visual alinhado essa semana? Responda essa mensagem para agendar seu horário!',
-      'Approved',
+      'APPROVED',
       NOW(),
       NOW()
     ),
@@ -5801,7 +5805,7 @@ BEGIN
       'Utility',
       'pt_BR',
       'E aí {{1}}! Tudo certo? Passando para lembrar do seu horário de {{2}} amanhã às {{3}} com o Alemão. Te esperamos!',
-      'Approved',
+      'APPROVED',
       NOW(),
       NOW()
     ),
@@ -5813,7 +5817,7 @@ BEGIN
       'Marketing',
       'pt_BR',
       'Fala {{1}}! Conhece o nosso Combo Completo? Corte degradê ou clássico + Barboterapia relaxante com toalha quente + Design de sobrancelha na navalha por apenas R$ 90,00! Quer garantir seu horário essa semana?',
-      'Approved',
+      'APPROVED',
       NOW(),
       NOW()
     );
@@ -5868,3 +5872,7 @@ Em caso de imprevisto ou necessidade de reagendamento, avisar com pelo menos 1 h
     );
 
 END $$;
+
+-- Recarrega o cache do PostgREST para expor as tabelas e schemas instantaneamente à API
+NOTIFY pgrst, 'reload schema';
+
