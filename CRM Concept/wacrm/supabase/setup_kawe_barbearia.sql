@@ -5737,22 +5737,19 @@ BEGIN
   END IF;
 
   -- 6. Inserir ou atualizar Pipeline Oficial vinculado à conta v_account_id
-  INSERT INTO public.pipelines (id, account_id, name, is_default, created_at, updated_at)
+  INSERT INTO public.pipelines (id, account_id, name, created_at)
   VALUES (
     v_pipeline_id,
     v_account_id,
     'Funil de Vendas - Barbearia do Alemão 777',
-    true,
-    NOW(),
     NOW()
   )
   ON CONFLICT (id) DO UPDATE SET
     account_id = v_account_id,
-    name = EXCLUDED.name,
-    updated_at = NOW();
+    name = EXCLUDED.name;
 
-  -- 7. Inserir Estágios do Pipeline
-  INSERT INTO public.pipeline_stages (id, pipeline_id, name, "order", color, created_at)
+  -- 7. Inserir Estágios do Pipeline (coluna 'position' correta)
+  INSERT INTO public.pipeline_stages (id, pipeline_id, name, "position", color, created_at)
   VALUES
     ('b1000000-0000-0000-0000-000000000001', v_pipeline_id, 'Novos Leads', 0, '#3B82F6', NOW()),
     ('b1000000-0000-0000-0000-000000000002', v_pipeline_id, 'Agendado', 1, '#C5A880', NOW()),
@@ -5762,67 +5759,76 @@ BEGIN
   ON CONFLICT (id) DO UPDATE SET
     pipeline_id = EXCLUDED.pipeline_id,
     name = EXCLUDED.name,
-    "order" = EXCLUDED."order",
+    "position" = EXCLUDED."position",
     color = EXCLUDED.color;
 
-  -- 8. Inserir Modelos de Mensagem WhatsApp para a Barbearia
+  -- 8. Inserir Modelos de Mensagem WhatsApp para a Barbearia (colunas: body_text, status)
   DELETE FROM public.message_templates
   WHERE account_id = v_account_id
     AND name IN ('confirmacao_agendamento', 'lembrete_retorno', 'lembrete_24h_antes', 'combo_promocional_90');
 
-  INSERT INTO public.message_templates (id, account_id, name, category, language, content, created_at, updated_at)
+  INSERT INTO public.message_templates (id, account_id, user_id, name, category, language, body_text, status, created_at, updated_at)
   VALUES
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'confirmacao_agendamento',
-      'UTILITY',
+      'Utility',
       'pt_BR',
       'Fala {{1}}! Confirmando seu agendamento de {{2}} para hoje às {{3}} na Barbearia do Alemão 777. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão. Qualquer imprevisto nos avise por aqui!',
+      'Approved',
       NOW(),
       NOW()
     ),
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'lembrete_retorno',
-      'MARKETING',
+      'Marketing',
       'pt_BR',
       'Fala {{1}}! Já faz {{2}} dias desde seu último corte aqui na Barbearia do Alemão 777. Que tal mantermos o visual alinhado essa semana? Responda essa mensagem para agendar seu horário!',
+      'Approved',
       NOW(),
       NOW()
     ),
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'lembrete_24h_antes',
-      'UTILITY',
+      'Utility',
       'pt_BR',
       'E aí {{1}}! Tudo certo? Passando para lembrar do seu horário de {{2}} amanhã às {{3}} com o Alemão. Te esperamos!',
+      'Approved',
       NOW(),
       NOW()
     ),
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'combo_promocional_90',
-      'MARKETING',
+      'Marketing',
       'pt_BR',
       'Fala {{1}}! Conhece o nosso Combo Completo? Corte degradê ou clássico + Barboterapia relaxante com toalha quente + Design de sobrancelha na navalha por apenas R$ 90,00! Quer garantir seu horário essa semana?',
+      'Approved',
       NOW(),
       NOW()
     );
 
-  -- 9. Inserir Base de Conhecimento da IA (AI Knowledge) para o Atendente Virtual
-  DELETE FROM public.ai_knowledge
+  -- 9. Inserir Base de Conhecimento da IA (ai_knowledge_documents) para o Atendente Virtual
+  DELETE FROM public.ai_knowledge_documents
   WHERE account_id = v_account_id
     AND title IN ('Tabela de Serviços e Preços da Barbearia', 'Horário de Funcionamento e Localização', 'Regras de Agendamento e Cancelamento');
 
-  INSERT INTO public.ai_knowledge (id, account_id, title, content, created_at, updated_at)
+  INSERT INTO public.ai_knowledge_documents (id, account_id, created_by, title, content, created_at, updated_at)
   VALUES
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'Tabela de Serviços e Preços da Barbearia',
       'Serviços oferecidos pela Barbearia do Alemão 777:
 - Corte de Cabelo (Tradicional, Degradê, Navalhado, Social): R$ 40,00 (30 minutos)
@@ -5838,6 +5844,7 @@ Formas de pagamento: Pix, Cartão de Débito, Cartão de Crédito e Dinheiro.',
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'Horário de Funcionamento e Localização',
       'A Barbearia do Alemão 777 funciona de Segunda a Sábado, das 09:00 às 19:00.
 Fechado aos Domingos e Feriados.
@@ -5851,6 +5858,7 @@ Instagram Oficial: @barbeariadoalemao777',
     (
       gen_random_uuid(),
       v_account_id,
+      v_user_id,
       'Regras de Agendamento e Cancelamento',
       'Agendamentos podem ser realizados diretamente pelo site oficial ou pelo WhatsApp da Barbearia.
 Pedimos que o cliente chegue com 5 minutos de antecedência. A tolerância máxima de atraso é de 10 minutos para não comprometer os próximos clientes da grade.
