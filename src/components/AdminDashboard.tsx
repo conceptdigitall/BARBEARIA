@@ -172,87 +172,75 @@ function BarbeariaLogo({ isDark }: { isDark: boolean }) {
 }
 
 // ============================================================================
-// CONVERSATIONS CHART (BARBEARIA GOLD / BRONZE PALETTE)
+// ============================================================================
+// BARBEARIA APPOINTMENTS & SERVICES TIMELINE CHART (REAL DATABASE DATA)
 // ============================================================================
 
-interface ChartPoint {
+export interface TimelinePoint {
   day: string;
   label: string;
-  incoming: number;
-  outgoing: number;
+  scheduled: number;
+  completed: number;
+  revenue?: number;
 }
 
-function ConversationsChart({ isDark }: { isDark: boolean }) {
+interface TimelineChartProps {
+  isDark: boolean;
+  chartData?: {
+    days7: TimelinePoint[];
+    days30: TimelinePoint[];
+    days90: TimelinePoint[];
+  } | null;
+}
+
+function BarbeariaTimelineChart({ isDark, chartData }: TimelineChartProps) {
   const [range, setRange] = useState<7 | 30 | 90>(30);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
-  const data: ChartPoint[] = useMemo(() => {
-    if (range === 7) {
-      return [
-        { day: '18/09', label: '18 de set.', incoming: 0, outgoing: 0 },
-        { day: '19/09', label: '19 de set.', incoming: 0, outgoing: 0 },
-        { day: '20/09', label: '20 de set.', incoming: 0, outgoing: 0 },
-        { day: '21/09', label: '21 de set.', incoming: 2, outgoing: 1 },
-        { day: '22/09', label: '22 de set.', incoming: 5, outgoing: 3 },
-        { day: '23/09', label: '23 de set.', incoming: 8, outgoing: 6 },
-        { day: '24/09', label: 'Hoje', incoming: 10, outgoing: 7 },
-      ];
+  const data: TimelinePoint[] = useMemo(() => {
+    if (chartData) {
+      if (range === 7 && chartData.days7 && chartData.days7.length > 0) return chartData.days7;
+      if (range === 90 && chartData.days90 && chartData.days90.length > 0) return chartData.days90;
+      if (chartData.days30 && chartData.days30.length > 0) return chartData.days30;
     }
-    if (range === 90) {
-      return [
-        { day: '01/07', label: '1 de jul.', incoming: 0, outgoing: 0 },
-        { day: '15/07', label: '15 de jul.', incoming: 0, outgoing: 0 },
-        { day: '01/08', label: '1 de ago.', incoming: 0, outgoing: 0 },
-        { day: '15/08', label: '15 de ago.', incoming: 0, outgoing: 0 },
-        { day: '01/09', label: '1 de set.', incoming: 0, outgoing: 0 },
-        { day: '15/09', label: '15 de set.', incoming: 2, outgoing: 1 },
-        { day: '24/09', label: '24 de set.', incoming: 10, outgoing: 7 },
-      ];
-    }
-    return [
-      { day: '26/08', label: '26 de ago.', incoming: 0, outgoing: 0 },
-      { day: '28/08', label: '28 de ago.', incoming: 0, outgoing: 0 },
-      { day: '31/08', label: '31 de ago.', incoming: 0, outgoing: 0 },
-      { day: '03/09', label: '3 de set.', incoming: 0, outgoing: 0 },
-      { day: '05/09', label: '5 de set.', incoming: 0, outgoing: 0 },
-      { day: '08/09', label: '8 de set.', incoming: 0, outgoing: 0 },
-      { day: '10/09', label: '10 de set.', incoming: 0, outgoing: 0 },
-      { day: '13/09', label: '13 de set.', incoming: 0, outgoing: 0 },
-      { day: '15/09', label: '15 de set.', incoming: 0, outgoing: 0 },
-      { day: '18/09', label: '18 de set.', incoming: 0, outgoing: 0 },
-      { day: '20/09', label: '20 de set.', incoming: 0, outgoing: 0 },
-      { day: '22/09', label: '22 de set.', incoming: 3, outgoing: 2 },
-      { day: '23/09', label: '23 de set.', incoming: 7, outgoing: 5 },
-      { day: '24/09', label: 'Hoje', incoming: 10, outgoing: 7 },
-    ];
-  }, [range]);
+    // Fallback inicial enquanto carrega
+    return Array.from({ length: range }, (_, i) => ({
+      day: '',
+      label: `Dia ${i + 1}`,
+      scheduled: 0,
+      completed: 0,
+      revenue: 0,
+    }));
+  }, [chartData, range]);
 
   const VB_W = 760;
   const VB_H = 240;
   const PADDING = { top: 16, right: 20, bottom: 32, left: 36 };
   const chartW = VB_W - PADDING.left - PADDING.right;
   const chartH = VB_H - PADDING.top - PADDING.bottom;
-  const maxY = 10;
-  const ticks = [0, 3, 5, 8, 10];
 
-  const stepX = chartW / (data.length - 1);
+  const maxVal = Math.max(...data.map((d) => Math.max(d.scheduled, d.completed)), 2);
+  const maxY = Math.max(4, Math.ceil(maxVal * 1.2));
+  const ticks = [0, Math.round(maxY * 0.33), Math.round(maxY * 0.66), maxY];
+
+  const stepX = data.length > 1 ? chartW / (data.length - 1) : chartW;
   const xFor = (i: number) => PADDING.left + i * stepX;
   const yFor = (v: number) => PADDING.top + chartH - (v / maxY) * chartH;
 
-  const incomingPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.incoming)}`).join(' ');
-  const outgoingPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.outgoing)}`).join(' ');
+  const scheduledPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.scheduled)}`).join(' ');
+  const completedPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.completed)}`).join(' ');
 
-  const stride = Math.max(1, Math.floor(data.length / 5));
+  const stride = Math.max(1, Math.floor(data.length / 6));
 
   return (
     <section className={`flex h-full flex-col rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
       <header className={`flex items-center justify-between border-b px-5 py-4 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
         <div>
           <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Conversas ao longo do tempo
+            Evolução de Atendimentos & Agendamentos
           </h2>
           <p className={`mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Volume diário de mensagens por direção
+            Volume diário de agendamentos e cortes concluídos na Barbearia do Alemão 777
           </p>
         </div>
         <div className={`flex items-center gap-1 rounded-lg p-1 ${isDark ? 'bg-slate-800/70' : 'bg-slate-100'}`}>
@@ -263,9 +251,7 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
               onClick={() => setRange(r)}
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                 range === r
-                  ? isDark
-                    ? 'bg-[#C5A880] text-black font-bold shadow-xs'
-                    : 'bg-[#C5A880] text-black font-bold shadow-xs'
+                  ? 'bg-[#C5A880] text-black font-bold shadow-xs'
                   : isDark
                   ? 'text-slate-400 hover:text-white'
                   : 'text-slate-500 hover:text-slate-900'
@@ -282,7 +268,7 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
           viewBox={`0 0 ${VB_W} ${VB_H}`}
           className="h-[240px] w-full overflow-visible"
           role="img"
-          aria-label="Gráfico de conversas da Barbearia do Alemão"
+          aria-label="Gráfico oficial de atendimentos e agendamentos da Barbearia do Alemão"
         >
           {ticks.map((t) => {
             const y = yFor(t);
@@ -311,7 +297,7 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
           {data.map((p, i) =>
             i % stride === 0 || i === data.length - 1 ? (
               <text
-                key={p.day}
+                key={p.day + i}
                 x={xFor(i)}
                 y={VB_H - 8}
                 textAnchor="middle"
@@ -322,9 +308,9 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
             ) : null
           )}
 
-          {/* Outgoing polyline (Bronze Nobre) */}
+          {/* Atendimentos Concluídos polyline (Bronze Nobre #8F724D) */}
           <path
-            d={outgoingPath}
+            d={completedPath}
             fill="none"
             stroke="#8F724D"
             strokeWidth="2.5"
@@ -332,9 +318,9 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
             strokeLinejoin="round"
           />
 
-          {/* Incoming polyline (Dourado Barbearia) */}
+          {/* Cortes Agendados polyline (Dourado Ouro Barbearia #D4AF37) */}
           <path
-            d={incomingPath}
+            d={scheduledPath}
             fill="none"
             stroke="#D4AF37"
             strokeWidth="2.5"
@@ -344,9 +330,9 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
 
           {data.map((p, i) => (
             <circle
-              key={p.day}
+              key={p.day + i}
               cx={xFor(i)}
-              cy={yFor(p.incoming)}
+              cy={yFor(p.scheduled)}
               r={hoverIdx === i ? 5 : 3}
               fill="#D4AF37"
               className="cursor-pointer transition-all hover:r-6"
@@ -367,11 +353,11 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
             <div className="mt-1 flex items-center gap-3">
               <span className="flex items-center gap-1.5 text-[#D4AF37] font-semibold">
                 <span className="h-2 w-2 rounded-full bg-[#D4AF37]" />
-                Recebidas: {data[hoverIdx].incoming}
+                Agendados: {data[hoverIdx].scheduled}
               </span>
               <span className="flex items-center gap-1.5 text-[#8F724D] font-semibold">
                 <span className="h-2 w-2 rounded-full bg-[#8F724D]" />
-                Enviadas: {data[hoverIdx].outgoing}
+                Concluídos: {data[hoverIdx].completed}
               </span>
             </div>
           </div>
@@ -381,11 +367,11 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
       <footer className={`flex items-center gap-5 border-t px-5 py-3 text-xs ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#D4AF37]" />
-          <span>Recebidas (Dourado Ouro)</span>
+          <span className="font-medium">Cortes Agendados (Dourado Ouro)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#8F724D]" />
-          <span>Enviadas (Bronze)</span>
+          <span className="font-medium">Atendimentos Concluídos (Bronze)</span>
         </div>
       </footer>
     </section>
@@ -429,7 +415,15 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     vipCount: 0,
     totalPipelineValue: 0,
     openDealsCount: 0,
+    todayAppointmentsCount: 0,
+    pendingConfirmationCount: 0,
+    completedTodayCount: 0,
   });
+  const [timelineData, setTimelineData] = useState<{
+    days7: TimelinePoint[];
+    days30: TimelinePoint[];
+    days90: TimelinePoint[];
+  } | null>(null);
   const [loadingCRM, setLoadingCRM] = useState(false);
   const [crmSearch, setCrmSearch] = useState('');
 
@@ -484,8 +478,11 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         if (data.metrics) {
           setCrmMetrics({
             ...data.metrics,
-            openDealsCount: data.leads ? data.leads.filter((l: any) => l.stage === 'CONFIRMED' || l.stage === 'NEW_LEAD').length : 0,
+            openDealsCount: data.metrics.openDealsCount ?? (data.leads ? data.leads.filter((l: any) => l.stage === 'CONFIRMED' || l.stage === 'NEW_LEAD').length : 0),
           });
+        }
+        if (data.chartData) {
+          setTimelineData(data.chartData);
         }
       }
     } catch (err) {
@@ -928,99 +925,100 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 </p>
               </div>
 
-              {/* 5 KPI Metric Cards */}
+              {/* 5 KPI Metric Cards (100% Sincronizados com o Banco de Dados da Barbearia) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 
-                {/* 1. Conversas ativas */}
+                {/* 1. Clientes Cadastrados */}
                 <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Conversas ativas
+                      Clientes na Base
                     </p>
                     <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
-                      <MessageSquare className="h-4 w-4" />
+                      <Users className="h-4 w-4" />
                     </div>
                   </div>
                   <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    3
+                    {crmMetrics.totalLeads}
                   </p>
                   <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#C5A880]">
-                    <ArrowUp className="h-3.5 w-3.5" />
-                    <span>+1 novos hoje vs. ontem</span>
+                    <span>clientes registrados no sistema</span>
                   </div>
                 </div>
 
-                {/* 2. Novos contatos hoje */}
+                {/* 2. Cortes Agendados Hoje */}
                 <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Novos contatos hoje
-                    </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
-                      <UserPlus className="h-4 w-4" />
-                    </div>
-                  </div>
-                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    2
-                  </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#C5A880]">
-                    <ArrowUp className="h-3.5 w-3.5" />
-                    <span>+1 vs. ontem</span>
-                  </div>
-                </div>
-
-                {/* 3. Valor dos negócios abertos */}
-                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                  <div className="flex items-start justify-between">
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Valor em Aberto
-                    </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
-                      <DollarSign className="h-4 w-4" />
-                    </div>
-                  </div>
-                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums text-[#C5A880]`}>
-                    R$ 0
-                  </p>
-                  <p className={`mt-2 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    0 negócios abertos
-                  </p>
-                </div>
-
-                {/* 4. Mensagens enviadas hoje */}
-                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                  <div className="flex items-start justify-between">
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Mensagens enviadas
-                    </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
-                      <Send className="h-4 w-4" />
-                    </div>
-                  </div>
-                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    0
-                  </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-500">
-                    <ArrowDown className="h-3.5 w-3.5" />
-                    <span>-1 vs. ontem</span>
-                  </div>
-                </div>
-
-                {/* 5. Cortes Agendados */}
-                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                  <div className="flex items-start justify-between">
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Cortes Agendados
+                      Cortes Hoje
                     </p>
                     <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <Calendar className="h-4 w-4" />
                     </div>
                   </div>
                   <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {appointments.length}
+                    {crmMetrics.todayAppointmentsCount || appointments.length}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#C5A880]">
+                    <span>
+                      {crmMetrics.pendingConfirmationCount > 0 
+                        ? `${crmMetrics.pendingConfirmationCount} aguardando confirmação` 
+                        : 'agendamentos para o dia'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Valor em Aberto / Faturamento do Funil */}
+                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
+                  <div className="flex items-start justify-between">
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Valor do Funil
+                    </p>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
+                      <DollarSign className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums text-[#C5A880]`}>
+                    {formatPrice(crmMetrics.totalPipelineValue)}
                   </p>
                   <p className={`mt-2 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    ativas nesta semana
+                    {crmMetrics.openDealsCount} negócios no pipeline
+                  </p>
+                </div>
+
+                {/* 4. Retorno Pendente */}
+                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
+                  <div className="flex items-start justify-between">
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Retorno (+15 dias)
+                    </p>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-amber-500' : 'bg-amber-500/15 text-amber-600'}`}>
+                      <Clock className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${crmMetrics.returnDueCount > 0 ? 'text-amber-500' : isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {crmMetrics.returnDueCount}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500">
+                    <span>prontos para retorno</span>
+                  </div>
+                </div>
+
+                {/* 5. Clientes VIP / Fidelizados */}
+                <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
+                  <div className="flex items-start justify-between">
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Clientes VIP
+                    </p>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
+                      <Crown className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums text-[#D4AF37]`}>
+                    {crmMetrics.vipCount}
+                  </p>
+                  <p className={`mt-2 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    fidelizados (3+ atendimentos)
                   </p>
                 </div>
               </div>
@@ -1116,7 +1114,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
               {/* 2-Column Section */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                 <div className="h-full lg:col-span-3">
-                  <ConversationsChart isDark={isDark} />
+                  <BarbeariaTimelineChart isDark={isDark} chartData={timelineData} />
                 </div>
 
                 <div className="h-full lg:col-span-2">

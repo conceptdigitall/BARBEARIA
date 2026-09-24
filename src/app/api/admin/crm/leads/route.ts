@@ -175,18 +175,80 @@ export async function GET() {
       };
     });
 
-    // Compute aggregated CRM metrics
+    // Coletar todos os agendamentos da Barbearia para série histórica
+    const allAppointmentsFlat = clients.flatMap((c) => c.appointments || []);
+
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const todayAppointments = allAppointmentsFlat.filter((a) => {
+      const d = new Date(a.dateTime);
+      return d >= startOfToday && d <= endOfToday;
+    });
+
+    const pendingAppointments = allAppointmentsFlat.filter((a) => a.status === 'PENDING_CONFIRMATION');
+    const completedToday = todayAppointments.filter((a) => a.status === 'COMPLETED');
+
+    const buildTimeline = (daysCount: number) => {
+      const result: { day: string; label: string; scheduled: number; completed: number; revenue: number }[] = [];
+      const monthsPt = ['jan.', 'fev.', 'mar.', 'abr.', 'maio', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+      
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dayStr = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+        const isToday = i === 0;
+        const label = isToday ? 'Hoje' : `${d.getDate()} de ${monthsPt[d.getMonth()]}`;
+        
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        const dateNum = d.getDate();
+
+        const appsOnDay = allAppointmentsFlat.filter((a) => {
+          const appD = new Date(a.dateTime);
+          return appD.getFullYear() === y && appD.getMonth() === m && appD.getDate() === dateNum;
+        });
+
+        const scheduled = appsOnDay.length;
+        const completed = appsOnDay.filter((a) => a.status === 'COMPLETED').length;
+        const revenue = appsOnDay
+          .filter((a) => a.status === 'COMPLETED')
+          .reduce((sum, a) => sum + Number(a.service?.price || 0), 0);
+
+        result.push({
+          day: dayStr,
+          label,
+          scheduled,
+          completed,
+          revenue,
+        });
+      }
+      return result;
+    };
+
+    const chartData = {
+      days7: buildTimeline(7),
+      days30: buildTimeline(30),
+      days90: buildTimeline(90),
+    };
+
+    // Métricas reais agregadas do banco de dados da Barbearia do Alemão
     const metrics = {
       totalLeads: leads.length,
       returnDueCount: leads.filter((l) => l.stage === 'RETURN_DUE' || l.isReturnDue).length,
       upcomingSoonCount: leads.filter((l) => l.isUpcomingSoon).length,
       vipCount: leads.filter((l) => l.stage === 'VIP' || l.totalAppointments >= 3).length,
       totalPipelineValue: leads.reduce((acc, l) => acc + l.lifetimeValue, 0),
+      todayAppointmentsCount: todayAppointments.length,
+      pendingConfirmationCount: pendingAppointments.length,
+      completedTodayCount: completedToday.length,
+      openDealsCount: leads.filter((l) => l.stage === 'CONFIRMED' || l.stage === 'NEW_LEAD').length,
     };
 
     return NextResponse.json({
       success: true,
       metrics,
+      chartData,
       leads,
     });
   } catch (error) {
