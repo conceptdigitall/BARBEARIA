@@ -1,5 +1,4 @@
-import { prisma } from '@/lib/prisma';
-import { getSessionUser } from '@/lib/auth';
+import { prisma, withPrismaRetry } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +8,7 @@ export async function GET(request: Request) {
   const dateStr = searchParams.get('date'); // YYYY-MM-DD
 
   try {
-    const tenant = await prisma.tenant.findFirst();
+    const tenant = await withPrismaRetry(() => prisma.tenant.findFirst());
     if (!tenant) {
       return NextResponse.json({ error: 'Nenhuma barbearia cadastrada' }, { status: 404 });
     }
@@ -26,35 +25,37 @@ export async function GET(request: Request) {
       };
     }
 
-    const rawAppointments = await prisma.appointment.findMany({
-      where: {
-        tenantId: tenant.id,
-        ...dateFilter,
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
+    const rawAppointments = await withPrismaRetry(() =>
+      prisma.appointment.findMany({
+        where: {
+          tenantId: tenant.id,
+          ...dateFilter,
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+            },
+          },
+          barber: {
+            select: {
+              name: true,
+            },
+          },
+          service: {
+            select: {
+              name: true,
+              price: true,
+            },
           },
         },
-        barber: {
-          select: {
-            name: true,
-          },
+        orderBy: {
+          dateTime: 'asc',
         },
-        service: {
-          select: {
-            name: true,
-            price: true,
-          },
-        },
-      },
-      orderBy: {
-        dateTime: 'asc',
-      },
-    });
+      })
+    );
 
     const appointments = rawAppointments.map((app) => ({
       id: app.id,
@@ -78,13 +79,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, appointments });
   } catch (error: any) {
-    console.error('Error fetching admin appointments:', error);
-    return NextResponse.json(
-      {
-        error: 'Erro ao buscar agendamentos',
-        details: error?.message || String(error),
-      },
-      { status: 500 }
-    );
+    console.warn('Prisma appointments warning (returning graceful empty):', error?.message);
+    // Graceful fallback to prevent frontend 500 when Clever Cloud connection limit is saturated
+    return NextResponse.json({
+      success: true,
+      appointments: [],
+      isDegraded: true,
+    });
   }
 }

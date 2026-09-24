@@ -493,15 +493,30 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   }, []);
 
-  useEffect(() => {
-    fetchAppointments(selectedDate);
-    fetchCRMLeads();
+  const isFirstMount = useRef(true);
 
+  // Stagger initial load so client requests do not collide with SSR connections
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      const timer = setTimeout(() => {
+        fetchCRMLeads();
+      }, 600);
+      return () => clearTimeout(timer);
+    } else {
+      fetchAppointments(selectedDate);
+    }
+  }, [selectedDate, fetchAppointments, fetchCRMLeads]);
+
+  // Gentle auto-refresh that staggers calls sequentially
+  useEffect(() => {
     if (!autoRefreshEnabled) return;
     const interval = setInterval(() => {
       fetchAppointments(selectedDate);
-      fetchCRMLeads();
-    }, 30000);
+      setTimeout(() => {
+        fetchCRMLeads();
+      }, 2000);
+    }, 60000);
     return () => clearInterval(interval);
   }, [selectedDate, autoRefreshEnabled, fetchAppointments, fetchCRMLeads]);
 
