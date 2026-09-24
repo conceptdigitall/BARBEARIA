@@ -1,0 +1,129 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AppointmentStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CANCELED
+  COMPLETED
+  NO_SHOW
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  BARBER
+}
+
+model Tenant {
+  id           String        @id @default(uuid())
+  slug         String        @unique
+  name         String
+  logoUrl      String?
+  themeConfig  Json?
+  views        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  users        User[]
+  services     Service[]
+  clients      Client[]
+  appointments Appointment[]
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole      @default(BARBER)
+  avatarUrl    String?
+  isActive     Boolean       @default(true)
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  appointments Appointment[]
+  availabilities Availability[]
+}
+
+model Service {
+  id               String        @id @default(uuid())
+  name             String
+  description      String?       @db.Text
+  category         String        @default("corte")
+  price            Decimal       @db.Decimal(10, 2)
+  promoPrice       Decimal?      @db.Decimal(10, 2)
+  promoStartDate   DateTime?
+  promoEndDate     DateTime?
+  durationMin      Int           @default(30)
+  imageUrl         String?       @db.Text
+  displayOrder     Int           @default(0)
+  allowedBarberIds Json?
+  isActive         Boolean       @default(true)
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  appointments Appointment[]
+}
+
+model Client {
+  id           String        @id @default(uuid())
+  name         String
+  phone        String
+  email        String?
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  appointments Appointment[]
+
+  @@unique([phone, tenantId])
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  dateTime       DateTime
+  status         AppointmentStatus @default(PENDING_CONFIRMATION)
+  whatsappSentAt DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  tenantId       String
+  tenant         Tenant            @relation(fields: [tenantId], references: [id])
+  
+  clientId       String
+  client         Client            @relation(fields: [clientId], references: [id])
+  
+  barberId       String
+  barber         User              @relation(fields: [barberId], references: [id])
+  
+  serviceId      String
+  service        Service           @relation(fields: [serviceId], references: [id])
+  
+  additionalServices Json?
+}
+
+model Availability {
+  id           String        @id @default(uuid())
+  dayOfWeek    Int
+  startTime    String
+  endTime      String
+  breakStart   String?
+  breakEnd     String?
+  isActive     Boolean       @default(true)
+  
+  barberId     String
+  barber       User          @relation(fields: [barberId], references: [id])
+}

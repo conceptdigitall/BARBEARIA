@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0b;
+  --foreground: #f5f5f7;
+  
+  /* Palette de Cores Premium */
+  --gold-primary: #C5A880; /* Dourado envelhecido */
+  --gold-accent: #D4AF37; /* Dourado brilhante */
+  --gold-hover: #b0936f;
+  --graphite-dark: #121214; /* Grafite escuro */
+  --graphite-light: #18181c;
+  --graphite-border: #26262b;
+  
+  /* Novas Cores Quentes e Editoriais */
+  --beige-light: #E8E2D9; /* Bege claro de fundo */
+  --beige-dark: #D1C7BD;  /* Bege secundário */
+  --orange-accent: #E67E22; /* Laranja queimado para blocos/botões */
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-gold-primary: var(--gold-primary);
+  --color-gold-accent: var(--gold-accent);
+  --color-gold-hover: var(--gold-hover);
+  --color-graphite-dark: var(--graphite-dark);
+  --color-graphite-light: var(--graphite-light);
+  --color-graphite-border: var(--graphite-border);
+  --color-beige-light: var(--beige-light);
+  --color-beige-dark: var(--beige-dark);
+  --color-orange-accent: var(--orange-accent);
+  
+  --font-serif: var(--font-cinzel), serif;
+  --font-sans: var(--font-montserrat), sans-serif;
+}
+
+/* Custom Utilities for Premium Look */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cinzel), serif;
+}
+
+/* Glassmorphism Effect */
+.glass-panel {
+  background: rgba(18, 18, 20, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 168, 128, 0.15);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(197, 168, 128, 0.35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(197, 168, 128, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Text Gold Gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFE8B6 0%, #C5A880 50%, #8F724D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-gold-gradient {
+  border-image: linear-gradient(135deg, #FFE8B6 0%, #C5A880 50%, #8F724D 100%) 1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c1c21;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C5A880;
+}
