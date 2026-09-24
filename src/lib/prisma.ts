@@ -1,4 +1,4 @@
- import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -8,9 +8,8 @@ declare global {
 export const prisma =
   globalThis.prisma ||
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    log: ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
-}
+// Always store on globalThis to reuse existing connection pools in serverless environments
+globalThis.prisma = prisma;
