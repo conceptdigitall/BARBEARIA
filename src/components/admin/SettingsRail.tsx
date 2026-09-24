@@ -16,10 +16,12 @@ import {
   User,
   Sliders,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 
 export type SettingsSection =
   | 'overview'
+  | 'schedules'
   | 'whatsapp'
   | 'ai'
   | 'cms'
@@ -120,6 +122,23 @@ export function SettingsRail({
         <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
           Espaço de Trabalho
         </p>
+
+        {/* Horários & Grade de Expediente */}
+        <button
+          type="button"
+          onClick={() => onSelect('schedules')}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${itemClass(
+            'schedules'
+          )}`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-4 h-4 shrink-0" />
+            <span>Horários & Grade</span>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-500 font-bold uppercase tracking-wider">
+            Ativo
+          </span>
+        </button>
         
         {/* WhatsApp Conexão */}
         <button

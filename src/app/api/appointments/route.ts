@@ -2,6 +2,21 @@ import { AppointmentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
+// Helper to parse time string "HH:MM" to minutes from 00:00
+function parseTimeToMinutes(time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+// Helper to format minutes back to "HH:MM"
+function formatMinutesToTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
 // Helper to generate time slots (30-minute intervals)
 function generateTimeSlots(start: string, end: string, breakStart: string | null, breakEnd: string | null) {
   const slots: string[] = [];
@@ -20,17 +35,6 @@ function generateTimeSlots(start: string, end: string, breakStart: string | null
   return slots;
 }
 
-function parseTimeToMinutes(time: string) {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-}
-
-function formatMinutesToTime(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-}
-
 // GET: Fetch available slots or appointments
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -42,25 +46,33 @@ export async function GET(request: Request) {
   }
 
   try {
-    const date = new Date(dateStr + 'T00:00:00');
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // 1. Calculate dayOfWeek safely with midday UTC to prevent any timezone shifts
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const middayUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    const dayOfWeek = middayUtc.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-    // 1. Fetch Tenant (assuming single-tenant for now, grab the first one)
+    // 2. Fetch Tenant
     const tenant = await prisma.tenant.findFirst();
     if (!tenant) {
       return NextResponse.json({ error: 'Nenhuma barbearia cadastrada' }, { status: 404 });
     }
 
-    // 2. Fetch Barbers (Only Alemão / Owner)
-    const barbers = await prisma.user.findMany({
-      where: {
-        tenantId: tenant.id,
-        isActive: true,
-        ...(barberId ? { id: barberId } : { role: 'OWNER' }),
-      },
+    // 3. Fetch Barbers
+    const barberWhere: any = {
+      tenantId: tenant.id,
+      isActive: true,
+    };
+    if (barberId && barberId.trim() !== '' && barberId !== 'all') {
+      barberWhere.id = barberId.trim();
+    } else {
+      barberWhere.role = 'OWNER';
+    }
+
+    let barbers = await prisma.user.findMany({
+      where: barberWhere,
       include: {
         availabilities: {
-          where: { 
+          where: {
             dayOfWeek,
             isActive: true,
           },
@@ -68,13 +80,31 @@ export async function GET(request: Request) {
       },
     });
 
+    // Fallback: If specific barber has no configuration or wasn't found, find any active barber
+    if (barbers.length === 0) {
+      barbers = await prisma.user.findMany({
+        where: {
+          tenantId: tenant.id,
+          isActive: true,
+        },
+        include: {
+          availabilities: {
+            where: {
+              dayOfWeek,
+              isActive: true,
+            },
+          },
+        },
+      });
+    }
+
     if (barbers.length === 0) {
       return NextResponse.json({ slots: [] });
     }
 
-    // 3. Fetch existing appointments for the day
-    const startOfDay = new Date(dateStr + 'T00:00:00');
-    const endOfDay = new Date(dateStr + 'T23:59:59');
+    // 4. Fetch existing appointments for the day in Brazil timezone
+    const startOfDay = new Date(`${dateStr}T00:00:00-03:00`);
+    const endOfDay = new Date(`${dateStr}T23:59:59.999-03:00`);
 
     const appointments = await prisma.appointment.findMany({
       where: {
@@ -91,13 +121,42 @@ export async function GET(request: Request) {
       },
     });
 
-    // 4. Calculate available slots
-    // A slot is available if at least one barber is available and not booked at that time
-    const allSlotsWithBarbers: { [time: string]: string[] } = {}; // time -> array of free barber IDs
+    // 5. Formatter for appointment times in America/Sao_Paulo (HH:mm)
+    const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    // 6. Check if target date is today in Brazil
+    const now = new Date();
+    const brazilDateFormatted = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now); // DD/MM/YYYY
+
+    const [bDay, bMonth, bYear] = brazilDateFormatted.split('/');
+    const todayStrBrazil = `${bYear}-${bMonth}-${bDay}`;
+    const isToday = dateStr === todayStrBrazil;
+
+    const currentBrazilTimeStr = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(now); // HH:MM
+
+    const currentMinutesToday = parseTimeToMinutes(currentBrazilTimeStr);
+
+    // 7. Calculate available slots across available barbers
+    const allSlotsWithBarbers: { [time: string]: string[] } = {};
 
     for (const barber of barbers) {
       const availability = barber.availabilities[0];
-      if (!availability) continue; // No availability configured for this day
+      if (!availability || !availability.isActive) continue;
 
       const barberSlots = generateTimeSlots(
         availability.startTime,
@@ -106,17 +165,17 @@ export async function GET(request: Request) {
         availability.breakEnd
       );
 
-      // Filter out slots where this barber already has an appointment
       const barberAppointments = appointments.filter((app) => app.barberId === barber.id);
-      const bookedTimes = barberAppointments.map((app) => {
-        const d = new Date(app.dateTime);
-        // Extract local hours and minutes from the saved UTC DateTime
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${hours}:${minutes}`;
-      });
+      const bookedTimes = barberAppointments.map((app) => timeFormatter.format(new Date(app.dateTime)));
 
       for (const slot of barberSlots) {
+        const slotMinutes = parseTimeToMinutes(slot);
+
+        // If checking today, don't allow booking slots that have already passed (give 15min advance buffer)
+        if (isToday && slotMinutes <= currentMinutesToday + 15) {
+          continue;
+        }
+
         if (!bookedTimes.includes(slot)) {
           if (!allSlotsWithBarbers[slot]) {
             allSlotsWithBarbers[slot] = [];
@@ -129,7 +188,12 @@ export async function GET(request: Request) {
     // Sort slots chronologically
     const availableSlots = Object.keys(allSlotsWithBarbers).sort();
 
-    return NextResponse.json({ slots: availableSlots });
+    return NextResponse.json({
+      success: true,
+      slots: availableSlots,
+      isToday,
+      totalSlotsCount: availableSlots.length,
+    });
   } catch (error) {
     console.error('Error in GET /api/appointments:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
@@ -152,26 +216,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Nenhuma barbearia cadastrada' }, { status: 404 });
     }
 
-    // 2. Resolve Barber (Always Alemão)
-    const dateTime = new Date(`${date}T${time}:00`);
-    const defaultBarber = await prisma.user.findFirst({
-      where: {
-        tenantId: tenant.id,
-        role: 'OWNER',
-        isActive: true,
-      },
-    });
-
-    if (!defaultBarber) {
-      return NextResponse.json({ error: 'Nenhum barbeiro padrão disponível' }, { status: 400 });
+    // 2. Resolve Barber
+    let targetBarber = null;
+    if (barberId && barberId.trim() !== '') {
+      targetBarber = await prisma.user.findFirst({
+        where: { id: barberId.trim(), tenantId: tenant.id, isActive: true },
+      });
+    }
+    if (!targetBarber) {
+      targetBarber = await prisma.user.findFirst({
+        where: {
+          tenantId: tenant.id,
+          role: 'OWNER',
+          isActive: true,
+        },
+      });
     }
 
-    const targetBarberId = defaultBarber.id;
+    if (!targetBarber) {
+      return NextResponse.json({ error: 'Nenhum barbeiro disponível' }, { status: 400 });
+    }
 
-    // Check if the selected barber is already booked
+    // 3. Create timezone-safe DateTime in Brazil (America/Sao_Paulo UTC-3)
+    const dateTime = new Date(`${date}T${time}:00-03:00`);
+
+    // Check if the selected barber is already booked at that exact date and time
     const conflict = await prisma.appointment.findFirst({
       where: {
-        barberId: targetBarberId,
+        barberId: targetBarber.id,
         dateTime,
         status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION] },
       },
@@ -181,7 +253,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Este horário já foi preenchido por outro cliente' }, { status: 400 });
     }
 
-    // 3. Find or Create Client
+    // 4. Find or Create Client
     let client = await prisma.client.findUnique({
       where: {
         phone_tenantId: {
@@ -201,12 +273,12 @@ export async function POST(request: Request) {
       });
     }
 
-    // 4. Create Appointment
+    // 5. Create Appointment
     const appointment = await prisma.appointment.create({
       data: {
         dateTime,
         clientId: client.id,
-        barberId: targetBarberId,
+        barberId: targetBarber.id,
         serviceId,
         additionalServices: additionalServices || null,
         tenantId: tenant.id,
@@ -219,13 +291,13 @@ export async function POST(request: Request) {
       },
     });
 
-    // 5. Simulate WhatsApp Message Dispatch
+    // 6. Simulate WhatsApp Message Dispatch
     console.log(`[WhatsApp API Simulation] Sending message to ${clientPhone}:`);
     const serviceNames = [
       appointment.service.name,
-      ...(additionalServices ? (additionalServices as any[]).map(s => s.name) : [])
+      ...(additionalServices ? (additionalServices as any[]).map((s: any) => s.name) : []),
     ].join(', ');
-    
+
     console.log(
       `Fala, ${clientName}! 🇩🇪 Seu horário com o barbeiro ${appointment.barber.name} para o(s) serviço(s) ${serviceNames} está pré-reservado para ${date} às ${time}. Confirme seu agendamento no link: http://localhost:3000/confirm/${appointment.id}`
     );

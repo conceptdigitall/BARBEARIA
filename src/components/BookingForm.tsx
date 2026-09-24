@@ -30,6 +30,7 @@ export default function BookingForm({
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const serviceId = selectedServices[0]?.id || '';
   const [barberId, setBarberId] = useState<string>('');
+  const [barbersList, setBarbersList] = useState<{ id: string; name: string; role: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [name, setName] = useState('');
@@ -50,7 +51,7 @@ export default function BookingForm({
     }).format(value);
   };
 
-  // Fetch default barber on mount to solve block
+  // Fetch active barbers on mount
   useEffect(() => {
     const fetchBarber = async () => {
       try {
@@ -58,7 +59,8 @@ export default function BookingForm({
         if (res.ok) {
           const data = await res.json();
           if (data.barbers && data.barbers.length > 0) {
-            setBarberId(data.barbers[0].id);
+            setBarbersList(data.barbers);
+            setBarberId((prev) => prev || data.barbers[0].id);
           }
         }
       } catch (err) {
@@ -341,6 +343,43 @@ export default function BookingForm({
             {step === 2 && (
               <div className="space-y-6">
 
+                {/* Barber Selection */}
+                {barbersList.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
+                      Escolha o Barbeiro
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {barbersList.map((b) => {
+                        const isSelected = barberId === b.id;
+                        return (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => {
+                              setBarberId(b.id);
+                              setSelectedTime('');
+                            }}
+                            className={`py-3 px-3 border text-center transition-all duration-300 flex items-center justify-between ${
+                              isSelected
+                                ? 'border-gold-primary bg-gold-primary/10 text-gold-primary'
+                                : 'border-graphite-border bg-graphite-light/40 text-white/70 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="w-3.5 h-3.5" />
+                              <span className="text-xs font-bold font-serif uppercase tracking-wider">{b.name}</span>
+                            </div>
+                            <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-semibold ${isSelected ? 'bg-gold-primary text-black' : 'bg-white/10 text-white/60'}`}>
+                              {b.role === 'OWNER' ? 'Principal' : 'Barbeiro'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Date Picker (Horizontal Calendar) */}
                 <div className="space-y-3">
                   <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
@@ -350,7 +389,10 @@ export default function BookingForm({
                     {daysList.map((day) => (
                       <div
                         key={day.dateStr}
-                        onClick={() => setSelectedDate(day.dateStr)}
+                        onClick={() => {
+                          setSelectedDate(day.dateStr);
+                          setSelectedTime('');
+                        }}
                         className={`p-3 border text-center cursor-pointer min-w-[70px] transition-all duration-300 flex-shrink-0 ${
                           selectedDate === day.dateStr
                             ? 'border-gold-primary bg-gold-primary/10 text-gold-primary'
@@ -367,15 +409,27 @@ export default function BookingForm({
 
                 {/* Time Slot Grid */}
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
-                    Horários Disponíveis
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
+                      Horários Disponíveis
+                    </label>
+                    {availableSlots.length > 0 && (
+                      <span className="text-[10px] text-white/40 font-semibold uppercase">
+                        {availableSlots.length} horários livres
+                      </span>
+                    )}
+                  </div>
                   
                   {loadingSlots ? (
                     <div className="py-8 text-center text-xs text-white/40">Carregando horários...</div>
                   ) : availableSlots.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-white/30 border border-dashed border-graphite-border">
-                      Nenhum horário disponível para este dia.
+                    <div className="py-8 px-4 text-center text-xs border border-dashed border-graphite-border bg-graphite-light/20 space-y-2">
+                      <p className="font-semibold text-white/70">
+                        Nenhum horário disponível para este dia.
+                      </p>
+                      <p className="text-[11px] text-white/40 font-light">
+                        Os horários deste profissional já foram preenchidos ou o expediente foi encerrado. Selecione outro dia acima para agendar!
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto pr-1">
@@ -436,7 +490,9 @@ export default function BookingForm({
                   </div>
                   <div className="flex justify-between border-t border-graphite-border/30 pt-2">
                     <span className="text-white/40 font-light">Profissional:</span>
-                    <span className="text-white font-bold">Alemão</span>
+                    <span className="text-white font-bold">
+                      {barbersList.find((b) => b.id === barberId)?.name || 'Alemão'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/40 font-light">Duração Total:</span>

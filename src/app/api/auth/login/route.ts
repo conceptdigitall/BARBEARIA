@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       // Resilient fallback for owner/barber in case of remote DB connection pool timeout
       if (cleanEmail === 'alemao@barbearia.com' && inputHash === hashPassword('alemao123')) {
         user = {
-          id: '9e03235c-1614-4985-b6c1-e13ff7ab9078',
+          id: 'ce544982-f443-43fe-a794-353c3bd5e040',
           email: 'alemao@barbearia.com',
           name: 'Alemão',
           role: 'OWNER',
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         };
       } else if (cleanEmail === 'johann@barbearia.com' && inputHash === hashPassword('johann123')) {
         user = {
-          id: '4139d91f-cd41-43d5-8aa1-87623e40858b',
+          id: 'e77f53ab-57b9-4b78-8aa8-84e2a8492abd',
           email: 'johann@barbearia.com',
           name: 'Johann',
           role: 'BARBER',

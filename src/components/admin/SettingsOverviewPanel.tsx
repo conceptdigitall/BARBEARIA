@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   Radio,
   Users,
@@ -12,6 +11,7 @@ import {
   Bot,
   Crown,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 import type { SettingsSection } from './SettingsRail';
 
@@ -71,7 +71,35 @@ export function SettingsOverviewPanel({
 
       {/* 2. Grid de Cards de Configuração (Réplica Pixel a Pixel do CRM Original) */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-        
+
+        {/* Card: Horários & Grade de Expediente */}
+        <button
+          type="button"
+          onClick={() => onSelect('schedules')}
+          className={`flex items-start justify-between rounded-xl border p-4 text-left transition-all ${cardBorder}`}
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C5A880]/15 text-[#C5A880]">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Horários & Grade
+              </h4>
+              <div className="mt-1 flex items-center gap-1.5 text-xs">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Sincronizado c/ Site
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]">
+                Expediente, folgas e almoço
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-400 mt-1 shrink-0" />
+        </button>
+
         {/* Card: WhatsApp */}
         <button
           type="button"

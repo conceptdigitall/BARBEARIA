@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const tenant = await prisma.tenant.findFirst();
@@ -11,12 +13,16 @@ export async function GET() {
     const barbers = await prisma.user.findMany({
       where: {
         tenantId: tenant.id,
-        role: 'OWNER',
         isActive: true,
+        role: { in: ['OWNER', 'BARBER'] },
       },
       select: {
         id: true,
         name: true,
+        role: true,
+      },
+      orderBy: {
+        role: 'asc', // OWNER first, then BARBERS
       },
     });
 

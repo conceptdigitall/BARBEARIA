@@ -57,6 +57,7 @@ import {
 
 import { SettingsRail, type SettingsSection } from '@/components/admin/SettingsRail';
 import { SettingsOverviewPanel } from '@/components/admin/SettingsOverviewPanel';
+import { AvailabilityPanel } from '@/components/admin/AvailabilityPanel';
 import { WhatsAppConfigPanel } from '@/components/admin/WhatsAppConfigPanel';
 import { AiConfigPanel } from '@/components/admin/AiConfigPanel';
 import { MembersPanel } from '@/components/admin/MembersPanel';
@@ -1264,6 +1265,18 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                       Linha do Tempo
                     </button>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('settings');
+                      setSettingsSection('schedules');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#C5A880]/40 bg-[#C5A880]/10 hover:bg-[#C5A880]/20 text-[#C5A880] transition-all"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Grade de Horários</span>
+                  </button>
                 </div>
               </div>
 
@@ -2062,6 +2075,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                       aiActive={true}
                       whatsappPhone={whatsapp}
                     />
+                  )}
+
+                  {settingsSection === 'schedules' && (
+                    <AvailabilityPanel isDark={isDark} />
                   )}
 
                   {settingsSection === 'whatsapp' && (
