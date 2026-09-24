@@ -2067,10 +2067,13 @@ CREATE TABLE IF NOT EXISTS accounts (
   -- owner_user_id is denormalised for fast "is this user the owner of
   -- their account" reads and for the one-account-per-user invariant
   -- below. The source of truth for membership is profiles.account_id.
-  owner_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
+  owner_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Assegurar que owner_user_id não cause falhas em bancos recém criados
+ALTER TABLE public.accounts ALTER COLUMN owner_user_id DROP NOT NULL;
 
 -- One account per user (the locked design decision — single
 -- membership). Drops automatically if we ever relax to many-to-many.
@@ -5675,19 +5678,49 @@ COMMENT ON COLUMN messages.error_details IS
 -- SEED PERSONALIZADO: BARBEARIA DO ALEMÃO 777 (KAWE)
 -- ============================================================
 
+-- Garante que owner_user_id não force NOT NULL se a tabela já existia antes
+ALTER TABLE public.accounts ALTER COLUMN owner_user_id DROP NOT NULL;
+
 -- 1. Inserir ou atualizar Conta Principal da Barbearia
-INSERT INTO public.accounts (id, name, default_currency, created_at, updated_at)
-VALUES (
-  '98195cca-d7ca-415d-b1c1-cc04106c307e',
-  'Barbearia do Alemão 777',
-  'BRL',
-  NOW(),
-  NOW()
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = EXCLUDED.name,
-  default_currency = EXCLUDED.default_currency,
-  updated_at = NOW();
+DO $$
+DECLARE
+  v_first_user_id UUID;
+  v_account_id UUID := '98195cca-d7ca-415d-b1c1-cc04106c307e';
+BEGIN
+  -- Se já houver usuário no Supabase Auth, captura o primeiro para vincular
+  SELECT id INTO v_first_user_id FROM auth.users ORDER BY created_at ASC LIMIT 1;
+
+  INSERT INTO public.accounts (id, name, default_currency, owner_user_id, created_at, updated_at)
+  VALUES (
+    v_account_id,
+    'Barbearia do Alemão 777',
+    'BRL',
+    v_first_user_id,
+    NOW(),
+    NOW()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    default_currency = EXCLUDED.default_currency,
+    owner_user_id = COALESCE(public.accounts.owner_user_id, EXCLUDED.owner_user_id),
+    updated_at = NOW();
+
+  -- Se encontramos um usuário, vincula ou atualiza o perfil dele como proprietário
+  IF v_first_user_id IS NOT NULL THEN
+    INSERT INTO public.profiles (user_id, full_name, email, account_id, account_role)
+    SELECT
+      v_first_user_id,
+      COALESCE(raw_user_meta_data->>'full_name', 'Kawe Alemão'),
+      email,
+      v_account_id,
+      'owner'::account_role_enum
+    FROM auth.users
+    WHERE id = v_first_user_id
+    ON CONFLICT (user_id) DO UPDATE SET
+      account_id = v_account_id,
+      account_role = 'owner';
+  END IF;
+END $$;
 
 -- 2. Inserir Pipeline Oficial da Barbearia
 INSERT INTO public.pipelines (id, account_id, name, is_default, created_at, updated_at)

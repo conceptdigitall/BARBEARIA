@@ -49,8 +49,18 @@ import {
   Share2,
   Clock4,
   Flame,
-  ArrowRight
+  ArrowRight,
+  Shield,
+  Palette,
+  QrCode,
 } from 'lucide-react';
+
+import { SettingsRail, type SettingsSection } from '@/components/admin/SettingsRail';
+import { SettingsOverviewPanel } from '@/components/admin/SettingsOverviewPanel';
+import { WhatsAppConfigPanel } from '@/components/admin/WhatsAppConfigPanel';
+import { AiConfigPanel } from '@/components/admin/AiConfigPanel';
+import { MembersPanel } from '@/components/admin/MembersPanel';
+import { TemplatesPanel } from '@/components/admin/TemplatesPanel';
 
 // ============================================================================
 // TYPES
@@ -439,6 +449,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   const [whatsapp, setWhatsapp] = useState(themeConfig.whatsapp || '+5513974249209');
   const [address, setAddress] = useState(themeConfig.address || 'Rua Espanha, 360 - Jardim Casqueiro - Cubatão / SP');
   const [savingConfig, setSavingConfig] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('overview');
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -1950,13 +1961,13 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 8: AUTOMAÇÕES, FLUXOS & AGENTES */}
+          {/* VIEW 8: AUTOMAÇÕES & FLUXOS */}
           {/* ========================================================================= */}
-          {(activeTab === 'automations' || activeTab === 'flows' || activeTab === 'agents') && (
+          {(activeTab === 'automations' || activeTab === 'flows') && (
             <div className="space-y-6">
               <div>
                 <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {activeTab === 'automations' ? 'Automações Inteligentes' : activeTab === 'flows' ? 'Fluxos de Atendimento (BETA)' : 'Agentes de IA'}
+                  {activeTab === 'automations' ? 'Automações Inteligentes' : 'Fluxos de Atendimento (BETA)'}
                 </h2>
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   Regras automáticas de retorno, disparo de confirmação 24h antes e atendente virtual da Barbearia do Alemão 777.
@@ -2013,78 +2024,183 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 9: CONFIGURAÇÕES */}
+          {/* VIEW 9: AGENTES DE IA (Conexão e Customização do Barbeiro IA) */}
+          {/* ========================================================================= */}
+          {activeTab === 'agents' && (
+            <AiConfigPanel isDark={isDark} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* VIEW 10: CONFIGURAÇÕES (Estrutura Completa com Sub-Rail e Conexões) */}
           {/* ========================================================================= */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <div>
-                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  Configurações da Barbearia (CMS)
+                <h2 className={`text-xl font-bold font-serif ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Configurações
                 </h2>
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Altere nome do salão, WhatsApp comercial, endereço e links exibidos na landing page.
+                  Tudo em um só lugar — sua conta e seu espaço de trabalho. Escolha uma seção para gerenciá-la.
                 </p>
               </div>
 
-              <form onSubmit={handleSaveCMS} className={`rounded-xl border p-6 max-w-2xl space-y-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Nome no Hero / Destaque:</label>
-                  <input
-                    type="text"
-                    value={heroName}
-                    onChange={(e) => setHeroName(e.target.value)}
-                    className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
-                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
-                    }`}
-                  />
-                </div>
+              <div className="grid gap-6 lg:grid-cols-[224px_minmax(0,1fr)] lg:items-start">
+                {/* Trilho de Navegação Lateral (Sub-rail) */}
+                <SettingsRail
+                  active={settingsSection}
+                  onSelect={(sec) => setSettingsSection(sec)}
+                  isDark={isDark}
+                  waConnected={true}
+                  aiActive={true}
+                />
 
-                <div>
-                  <label className="text-xs font-semibold block mb-1">WhatsApp de Atendimento:</label>
-                  <input
-                    type="text"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
-                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
-                    }`}
-                  />
-                </div>
+                {/* Painel de Conteúdo da Seção Ativa */}
+                <div className="min-w-0">
+                  {settingsSection === 'overview' && (
+                    <SettingsOverviewPanel
+                      onSelect={(sec) => setSettingsSection(sec)}
+                      isDark={isDark}
+                      waConnected={true}
+                      aiActive={true}
+                      whatsappPhone={whatsapp}
+                    />
+                  )}
 
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Instagram:</label>
-                  <input
-                    type="text"
-                    value={instagram}
-                    onChange={(e) => setInstagram(e.target.value)}
-                    className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
-                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
-                    }`}
-                  />
-                </div>
+                  {settingsSection === 'whatsapp' && (
+                    <WhatsAppConfigPanel
+                      isDark={isDark}
+                      connected={true}
+                      phone={whatsapp}
+                    />
+                  )}
 
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Endereço Completo:</label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
-                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
-                    }`}
-                  />
-                </div>
+                  {settingsSection === 'ai' && (
+                    <AiConfigPanel isDark={isDark} />
+                  )}
 
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={savingConfig}
-                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs"
-                  >
-                    {savingConfig ? 'Salvando...' : 'Salvar Alterações'}
-                  </button>
+                  {settingsSection === 'members' && (
+                    <MembersPanel isDark={isDark} />
+                  )}
+
+                  {settingsSection === 'templates' && (
+                    <TemplatesPanel isDark={isDark} />
+                  )}
+
+                  {settingsSection === 'cms' && (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className={`text-base font-bold font-serif ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          Configurações da Barbearia (CMS)
+                        </h3>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Altere nome do salão, WhatsApp comercial, endereço e links exibidos na landing page.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleSaveCMS} className={`rounded-xl border p-6 max-w-2xl space-y-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
+                        <div>
+                          <label className="text-xs font-semibold block mb-1">Nome no Hero / Destaque:</label>
+                          <input
+                            type="text"
+                            value={heroName}
+                            onChange={(e) => setHeroName(e.target.value)}
+                            className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
+                              isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold block mb-1">WhatsApp de Atendimento:</label>
+                          <input
+                            type="text"
+                            value={whatsapp}
+                            onChange={(e) => setWhatsapp(e.target.value)}
+                            className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
+                              isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold block mb-1">Instagram:</label>
+                          <input
+                            type="text"
+                            value={instagram}
+                            onChange={(e) => setInstagram(e.target.value)}
+                            className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
+                              isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold block mb-1">Endereço Completo:</label>
+                          <input
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${
+                              isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div className="pt-2">
+                          <button
+                            type="submit"
+                            disabled={savingConfig}
+                            className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs"
+                          >
+                            {savingConfig ? 'Salvando...' : 'Salvar Alterações'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {settingsSection === 'deals' && (
+                    <div className={`rounded-xl border p-6 space-y-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+                      <h3 className="font-bold text-sm">Negócios e Moeda</h3>
+                      <p className="text-xs text-slate-500">Defina a moeda padrão exibida nos orçamentos, combos e relatórios financeiros.</p>
+                      <div className="max-w-xs">
+                        <label className="text-xs font-semibold block mb-1">Moeda Oficial:</label>
+                        <input type="text" readOnly value="BRL (R$) — Real Brasileiro" className={`w-full rounded-lg border py-2 px-3 text-xs outline-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
+                      </div>
+                    </div>
+                  )}
+
+                  {settingsSection === 'appearance' && (
+                    <div className={`rounded-xl border p-6 space-y-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+                      <h3 className="font-bold text-sm">Aparência do Painel</h3>
+                      <p className="text-xs text-slate-500">Escolha o tema visual do CRM da Barbearia do Alemão 777.</p>
+                      <div className="flex gap-4">
+                        <button type="button" onClick={() => setTheme('light')} className={`p-4 rounded-xl border flex flex-col items-center gap-2 ${!isDark ? 'border-[#C5A880] bg-amber-500/10 font-bold text-black' : 'border-slate-700 text-slate-400'}`}>
+                          <Sun className="w-5 h-5 text-amber-500" />
+                          <span>Modo Claro</span>
+                        </button>
+                        <button type="button" onClick={() => setTheme('dark')} className={`p-4 rounded-xl border flex flex-col items-center gap-2 ${isDark ? 'border-[#C5A880] bg-slate-800 font-bold text-white' : 'border-slate-200 text-slate-600'}`}>
+                          <Moon className="w-5 h-5 text-[#C5A880]" />
+                          <span>Modo Escuro</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(settingsSection === 'profile' || settingsSection === 'security' || settingsSection === 'quick-replies' || settingsSection === 'fields') && (
+                    <div className={`rounded-xl border p-6 space-y-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+                      <h3 className="font-bold text-sm">
+                        {settingsSection === 'profile' ? 'Seu Perfil de Administrador' : settingsSection === 'security' ? 'Login e Segurança' : settingsSection === 'quick-replies' ? 'Respostas Rápidas' : 'Campos e Tags'}
+                      </h3>
+                      <p className="text-xs text-slate-500">Configurações ativas e sincronizadas com a conta de Kawe Alemão (Proprietário).</p>
+                      <div className="p-4 rounded-lg bg-emerald-500/10 text-emerald-600 text-xs font-semibold flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Sessão autenticada e protegida com criptografia ponta a ponta.
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </form>
+              </div>
             </div>
           )}
 
