@@ -130,60 +130,31 @@ type NavTab =
   | 'settings';
 
 // ============================================================================
-// BRAND LOGO (CONCEPT CRM Lobo-Guará)
+// BRAND LOGO (BARBEARIA DO ALEMÃO 777)
 // ============================================================================
 
-function ConceptLogo({ isDark }: { isDark: boolean }) {
+function BarbeariaLogo({ isDark }: { isDark: boolean }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#0624C7] text-white shadow-md shadow-[#0624C7]/20 border border-white/10 shrink-0">
-        <svg viewBox="0 0 48 48" fill="none" className="w-6 h-6 shrink-0" aria-label="Lobo-Guará Concept Digital">
-          <path
-            d="M24 44L14 34L17 25L24 31L31 25L34 34L24 44Z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="opacity-90"
-          />
-          <path
-            d="M24 31V16M24 31L20 23L24 16L28 23L24 31Z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M14 18L11 4L22 13L17 25L14 18Z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M34 18L37 4L26 13L31 25L34 18Z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path d="M22 13H26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <circle cx="19" cy="21" r="1.3" fill="currentColor" opacity="0.8" />
-          <circle cx="29" cy="21" r="1.5" fill="#FCE026" />
-          <path d="M23 30.5H25" stroke="#FCE026" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
+      <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#C5A880] shadow-[0_0_12px_rgba(197,168,128,0.35)] shrink-0 bg-black">
+        <Image
+          src="/logo.png"
+          alt="Barbearia do Alemão 777"
+          fill
+          className="object-cover"
+        />
       </div>
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
-          <span className={`font-black tracking-wider text-sm uppercase leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            CONCEPT
+          <span className={`font-black tracking-wider text-sm uppercase leading-none font-serif ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            ALEMÃO
           </span>
-          <span className="font-bold text-[10px] uppercase px-1.5 py-0.5 rounded bg-[#0624C7]/15 text-[#0624C7] dark:text-[#5373ff] border border-[#0624C7]/20 leading-none">
-            CRM
+          <span className="font-bold text-[10px] uppercase px-1.5 py-0.5 rounded bg-[#C5A880]/20 text-[#C5A880] dark:text-[#D4AF37] border border-[#C5A880]/30 leading-none">
+            777 CRM
           </span>
         </div>
-        <span className={`text-[10px] tracking-widest uppercase font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          DIGITAL ASSETS
+        <span className="text-[9px] tracking-widest uppercase font-semibold mt-1 text-[#C5A880]">
+          BARBEARIA • DESDE 2020
         </span>
       </div>
     </div>
@@ -191,7 +162,7 @@ function ConceptLogo({ isDark }: { isDark: boolean }) {
 }
 
 // ============================================================================
-// CONVERSATIONS CHART (EXACT REPLICA FROM CONCEPT CRM)
+// CONVERSATIONS CHART (BARBEARIA GOLD / BRONZE PALETTE)
 // ============================================================================
 
 interface ChartPoint {
@@ -205,8 +176,6 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
   const [range, setRange] = useState<7 | 30 | 90>(30);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
-  // Series points matching the screenshot visual curve:
-  // Flat at 0 from 26 de ago to ~20 de set, then sharp rise up to 10 incoming and 7 outgoing
   const data: ChartPoint[] = useMemo(() => {
     if (range === 7) {
       return [
@@ -216,8 +185,8 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
         { day: '21/09', label: '21 de set.', incoming: 2, outgoing: 1 },
         { day: '22/09', label: '22 de set.', incoming: 5, outgoing: 3 },
         { day: '23/09', label: '23 de set.', incoming: 8, outgoing: 6 },
-        { day: '24/09', label: 'Hoje', label_short: 'Hoje', incoming: 10, outgoing: 7 },
-      ] as any;
+        { day: '24/09', label: 'Hoje', incoming: 10, outgoing: 7 },
+      ];
     }
     if (range === 90) {
       return [
@@ -230,7 +199,6 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
         { day: '24/09', label: '24 de set.', incoming: 10, outgoing: 7 },
       ];
     }
-    // 30 days (default)
     return [
       { day: '26/08', label: '26 de ago.', incoming: 0, outgoing: 0 },
       { day: '28/08', label: '28 de ago.', incoming: 0, outgoing: 0 },
@@ -264,7 +232,6 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
   const incomingPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.incoming)}`).join(' ');
   const outgoingPath = data.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i)},${yFor(p.outgoing)}`).join(' ');
 
-  // Display ~6 labels evenly spaced along the x axis
   const stride = Math.max(1, Math.floor(data.length / 5));
 
   return (
@@ -287,8 +254,8 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                 range === r
                   ? isDark
-                    ? 'bg-slate-700 text-white font-semibold shadow-xs'
-                    : 'bg-white text-slate-900 font-semibold shadow-xs'
+                    ? 'bg-[#C5A880] text-black font-bold shadow-xs'
+                    : 'bg-[#C5A880] text-black font-bold shadow-xs'
                   : isDark
                   ? 'text-slate-400 hover:text-white'
                   : 'text-slate-500 hover:text-slate-900'
@@ -305,9 +272,8 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
           viewBox={`0 0 ${VB_W} ${VB_H}`}
           className="h-[240px] w-full overflow-visible"
           role="img"
-          aria-label="Gráfico de conversas ao longo do tempo"
+          aria-label="Gráfico de conversas da Barbearia do Alemão"
         >
-          {/* Y gridlines and ticks */}
           {ticks.map((t) => {
             const y = yFor(t);
             return (
@@ -324,7 +290,7 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
                   x={PADDING.left - 8}
                   y={y + 3}
                   textAnchor="end"
-                  className={`text-[10px] font-mono ${isDark ? 'fill-slate-400' : 'fill-slate-400'}`}
+                  className="text-[10px] font-mono fill-slate-400"
                 >
                   {t}
                 </text>
@@ -332,7 +298,6 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
             );
           })}
 
-          {/* X axis labels */}
           {data.map((p, i) =>
             i % stride === 0 || i === data.length - 1 ? (
               <text
@@ -347,34 +312,33 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
             ) : null
           )}
 
-          {/* Outgoing polyline (Purple / Violet) */}
+          {/* Outgoing polyline (Bronze Nobre) */}
           <path
             d={outgoingPath}
             fill="none"
-            stroke="#9333EA"
+            stroke="#8F724D"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Incoming polyline (Concept Blue) */}
+          {/* Incoming polyline (Dourado Barbearia) */}
           <path
             d={incomingPath}
             fill="none"
-            stroke="#2563EB"
+            stroke="#D4AF37"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Hit targets for hover */}
           {data.map((p, i) => (
             <circle
               key={p.day}
               cx={xFor(i)}
               cy={yFor(p.incoming)}
               r={hoverIdx === i ? 5 : 3}
-              fill="#2563EB"
+              fill="#D4AF37"
               className="cursor-pointer transition-all hover:r-6"
               onMouseEnter={() => setHoverIdx(i)}
               onMouseLeave={() => setHoverIdx(null)}
@@ -391,12 +355,12 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
           >
             <p className="font-semibold">{data[hoverIdx].label}</p>
             <div className="mt-1 flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-blue-500">
-                <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="flex items-center gap-1.5 text-[#D4AF37] font-semibold">
+                <span className="h-2 w-2 rounded-full bg-[#D4AF37]" />
                 Recebidas: {data[hoverIdx].incoming}
               </span>
-              <span className="flex items-center gap-1.5 text-purple-500">
-                <span className="h-2 w-2 rounded-full bg-purple-500" />
+              <span className="flex items-center gap-1.5 text-[#8F724D] font-semibold">
+                <span className="h-2 w-2 rounded-full bg-[#8F724D]" />
                 Enviadas: {data[hoverIdx].outgoing}
               </span>
             </div>
@@ -406,12 +370,12 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
 
       <footer className={`flex items-center gap-5 border-t px-5 py-3 text-xs ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-          <span>Recebidas</span>
+          <span className="h-2.5 w-2.5 rounded-full bg-[#D4AF37]" />
+          <span>Recebidas (Dourado Ouro)</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-purple-600" />
-          <span>Enviadas</span>
+          <span className="h-2.5 w-2.5 rounded-full bg-[#8F724D]" />
+          <span>Enviadas (Bronze)</span>
         </div>
       </footer>
     </section>
@@ -423,15 +387,12 @@ function ConversationsChart({ isDark }: { isDark: boolean }) {
 // ============================================================================
 
 export default function AdminDashboard({ initialAppointments, tenant, views }: AdminDashboardProps) {
-  // Theme state: defaults to light to exactly match Image 2
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const isDark = theme === 'dark';
 
-  // Navigation tab state
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Date selection state
   const getTodayStr = () => {
     const today = new Date();
     const y = today.getFullYear();
@@ -446,12 +407,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
 
-  // Appointments Filter and Search
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
-  // CRM & Leads State
   const [crmLeads, setCrmLeads] = useState<CRMLead[]>([]);
   const [crmMetrics, setCrmMetrics] = useState({
     totalLeads: 0,
@@ -462,25 +421,18 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     openDealsCount: 0,
   });
   const [loadingCRM, setLoadingCRM] = useState(false);
-  const [crmFilter, setCrmFilter] = useState<'ALL' | 'RETURN_DUE' | 'UPCOMING' | 'VIP' | 'NEW'>('ALL');
   const [crmSearch, setCrmSearch] = useState('');
-  const [crmView, setCrmView] = useState<'kanban' | 'list'>('kanban');
 
-  // WhatsApp & Broadcast State
-  const [clients, setClients] = useState<any[]>([]);
   const [selectedRecipientType, setSelectedRecipientType] = useState<'manual' | 'today' | 'tomorrow' | 'return_due' | 'all'>('manual');
   const [manualPhone, setManualPhone] = useState<string>('');
   const [manualName, setManualName] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('reminder');
   const [customMessage, setCustomMessage] = useState<string>(
-    'Olá {Nome}! Passando para lembrar do seu corte na Barbearia do Alemão 777. Nos vemos em breve!'
+    'Fala {Nome}! Passando para lembrar do seu corte na Barbearia do Alemão 777. Nos vemos em breve!'
   );
 
-  // Quick Action Modals
   const [newContactModal, setNewContactModal] = useState(false);
   const [newContactData, setNewContactData] = useState({ name: '', phone: '', email: '', notes: '' });
 
-  // CMS Form State
   const themeConfig = tenant?.themeConfig || {};
   const [heroName, setHeroName] = useState(themeConfig.heroName || 'ALEMÃO 777');
   const [instagram, setInstagram] = useState(themeConfig.instagram || 'https://www.instagram.com/barbeariadoalemao777/');
@@ -488,7 +440,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   const [address, setAddress] = useState(themeConfig.address || 'Rua Espanha, 360 - Jardim Casqueiro - Cubatão / SP');
   const [savingConfig, setSavingConfig] = useState(false);
 
-  // Format price helper
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -496,7 +447,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }).format(value);
   };
 
-  // Fetch appointments for selected date
   const fetchAppointments = useCallback(async (dateToFetch: string) => {
     setLoadingAppointments(true);
     try {
@@ -513,7 +463,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   }, []);
 
-  // Fetch CRM Leads
   const fetchCRMLeads = useCallback(async () => {
     setLoadingCRM(true);
     try {
@@ -535,7 +484,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   }, []);
 
-  // Auto-refresh every 30s
   useEffect(() => {
     fetchAppointments(selectedDate);
     fetchCRMLeads();
@@ -548,7 +496,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     return () => clearInterval(interval);
   }, [selectedDate, autoRefreshEnabled, fetchAppointments, fetchCRMLeads]);
 
-  // Handle appointment status update
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/appointments/${id}`, {
@@ -567,7 +514,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   };
 
-  // Direct WhatsApp sender
   const handleSendWhatsApp = (phone: string, text: string) => {
     const cleanPhone = phone.replace(/\D/g, '');
     const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
@@ -575,7 +521,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     window.open(url, '_blank');
   };
 
-  // Filtered appointments
   const filteredAppointments = useMemo(() => {
     return appointments.filter((app) => {
       const matchesStatus = statusFilter === 'ALL' || app.status === statusFilter;
@@ -588,7 +533,6 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     });
   }, [appointments, statusFilter, searchQuery]);
 
-  // Save CMS Settings
   const handleSaveCMS = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingConfig(true);
@@ -604,7 +548,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         }),
       });
       if (res.ok) {
-        alert('Configurações salvas com sucesso!');
+        alert('Configurações da barbearia salvas com sucesso!');
       } else {
         alert('Erro ao salvar configurações.');
       }
@@ -616,14 +560,12 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   };
 
-  // Notification count
   const pendingAppointments = useMemo(
     () => appointments.filter((a) => a.status === 'PENDING_CONFIRMATION'),
     [appointments]
   );
   const notificationCount = pendingAppointments.length + crmMetrics.returnDueCount;
 
-  // Title for top header
   const getTabTitle = (tab: NavTab) => {
     switch (tab) {
       case 'dashboard':
@@ -651,12 +593,12 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   };
 
+  const activeNavClass = 'bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black shadow-md font-bold shadow-[#C5A880]/20';
+
   return (
     <div className={`flex h-screen overflow-hidden font-sans transition-colors duration-200 ${isDark ? 'bg-[#0B0F17] text-slate-100' : 'bg-[#F8FAFC] text-slate-900'}`}>
       
-      {/* ========================================================================= */}
-      {/* MOBILE BACKDROP */}
-      {/* ========================================================================= */}
+      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -665,7 +607,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
       )}
 
       {/* ========================================================================= */}
-      {/* FIXED LEFT SIDEBAR (EXACT REPLICA FROM CONCEPT CRM) */}
+      {/* FIXED LEFT SIDEBAR (BARBEARIA DO ALEMÃO 777 THEME) */}
       {/* ========================================================================= */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r transition-transform duration-200 ease-out will-change-transform lg:static lg:z-0 lg:w-64 lg:translate-x-0 ${
@@ -673,8 +615,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         } ${isDark ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-200'}`}
       >
         {/* Brand / Logo Top Row */}
-        <div className={`flex h-14 shrink-0 items-center justify-between border-b px-4 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-          <ConceptLogo isDark={isDark} />
+        <div className={`flex h-16 shrink-0 items-center justify-between border-b px-4 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+          <BarbeariaLogo isDark={isDark} />
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
@@ -692,9 +634,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'dashboard'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -708,17 +650,17 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('inbox'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'inbox'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <MessageSquare className="h-4 w-4" />
             <span className="flex-1 text-left">Caixa de entrada</span>
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C5A880] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C5A880]" />
             </span>
           </button>
 
@@ -728,16 +670,16 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('notifications'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'notifications'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Bell className="h-4 w-4" />
             <span className="flex-1 text-left">Notificações</span>
             {notificationCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-bold text-white">
+              <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${activeTab === 'notifications' ? 'bg-black text-[#C5A880]' : 'bg-[#C5A880] text-black'}`}>
                 {notificationCount}
               </span>
             )}
@@ -749,9 +691,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('contacts'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'contacts'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -765,9 +707,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('pipelines'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'pipelines'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -781,16 +723,16 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('appointments'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'appointments'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Calendar className="h-4 w-4" />
             <span className="flex-1 text-left">Agendamentos</span>
             {appointments.length > 0 && (
-              <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${activeTab === 'appointments' ? 'bg-black text-[#C5A880]' : 'bg-[#C5A880]/20 text-[#C5A880]'}`}>
                 {appointments.length}
               </span>
             )}
@@ -802,9 +744,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('broadcasts'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'broadcasts'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -818,9 +760,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('automations'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'automations'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -834,15 +776,15 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('flows'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'flows'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Workflow className="h-4 w-4" />
             <span className="flex-1 text-left">Fluxos</span>
-            <span className="rounded-full border border-[#FCE026]/40 bg-[#FCE026]/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#b89f0a] dark:text-[#FCE026]">
+            <span className="rounded-full border border-[#C5A880]/40 bg-[#C5A880]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#C5A880]">
               BETA
             </span>
           </button>
@@ -853,9 +795,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('agents'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'agents'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -872,9 +814,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               activeTab === 'settings'
-                ? 'bg-[#0624C7] text-white shadow-sm font-semibold'
+                ? activeNavClass
                 : isDark
-                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                ? 'text-slate-400 hover:bg-slate-800/70 hover:text-[#C5A880]'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -883,28 +825,24 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           </button>
         </nav>
 
-        {/* Bottom User Section (Matching Image 2) */}
+        {/* Bottom User Section (Barbearia Profile) */}
         <div className={`shrink-0 border-t p-3 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-          {/* Account name & Crown badge */}
           <div className="mb-2 flex items-center justify-between px-2 text-xs">
-            <div className="flex items-center gap-1.5 font-medium truncate">
-              <span className={`truncate max-w-[100px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                saccon...
-              </span>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#FCE026]/40 bg-[#FCE026]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#b89f0a] dark:text-[#FCE026]">
-              <Crown className="w-3 h-3 text-[#FCE026]" />
+            <span className={`font-bold truncate max-w-[110px] ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+              Kawe (Alemão)
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-[#C5A880]/40 bg-[#C5A880]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C5A880]">
+              <Crown className="w-3 h-3 text-[#C5A880]" />
               PROPRIETÁRIO
             </span>
           </div>
 
-          {/* User Email Pill */}
           <div className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 transition-colors ${isDark ? 'hover:bg-slate-800/70' : 'hover:bg-slate-100'}`}>
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 font-bold text-xs shrink-0">
-              S
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C5A880]/20 text-[#C5A880] font-black text-xs shrink-0 border border-[#C5A880]/30">
+              K
             </div>
-            <p className={`truncate text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`} title="sacconceptdigital@gmail.com">
-              sacconceptdigital@gma...
+            <p className={`truncate text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`} title="alemao@barbearia.com">
+              alemao@barbearia.com
             </p>
           </div>
         </div>
@@ -916,7 +854,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
       <div className="flex flex-1 flex-col overflow-hidden">
         
         {/* Top Header Bar */}
-        <header className={`flex h-14 shrink-0 items-center justify-between border-b px-4 lg:px-6 transition-colors ${isDark ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <header className={`flex h-16 shrink-0 items-center justify-between border-b px-4 lg:px-6 transition-colors ${isDark ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -926,18 +864,18 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className={`text-base font-semibold sm:text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <h1 className={`text-base font-bold sm:text-lg font-serif tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {getTabTitle(activeTab)}
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Live indicator */}
-            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
-              isDark ? 'bg-slate-800/50 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'
+            {/* Live Indicator */}
+            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${
+              isDark ? 'bg-slate-800/50 border-[#C5A880]/30 text-[#C5A880]' : 'bg-slate-50 border-[#C5A880]/30 text-[#C5A880]'
             }`}>
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Ao Vivo</span>
+              <span>Sistema Ao Vivo</span>
             </div>
 
             {/* Theme Toggle (Sun / Moon) */}
@@ -946,7 +884,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               className={`p-2 rounded-lg border transition-all ${
                 isDark 
-                  ? 'border-slate-700 bg-slate-800 text-amber-400 hover:bg-slate-700' 
+                  ? 'border-slate-700 bg-slate-800 text-[#C5A880] hover:bg-slate-700' 
                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
               title={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
@@ -955,8 +893,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             </button>
 
             {/* Profile Avatar */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600/15 text-blue-600 font-bold text-sm border border-blue-600/20">
-              S
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C5A880]/20 text-[#C5A880] font-black text-sm border border-[#C5A880]/40">
+              K
             </div>
           </div>
         </header>
@@ -965,22 +903,21 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           
           {/* ========================================================================= */}
-          {/* VIEW 1: PAINEL (EXACT REPLICA FROM CONCEPT CRM IMAGE 2) */}
+          {/* VIEW 1: PAINEL */}
           {/* ========================================================================= */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               
-              {/* Header */}
               <div>
                 <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  Painel
+                  Painel Geral
                 </h1>
                 <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Métricas ao vivo de conversas, contatos, negócios, disparos e automações.
+                  Métricas em tempo real da Barbearia do Alemão 777 (atendimentos, retorno e faturamento).
                 </p>
               </div>
 
-              {/* 5 KPI Metric Cards in a single row */}
+              {/* 5 KPI Metric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 
                 {/* 1. Conversas ativas */}
@@ -989,14 +926,14 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                       Conversas ativas
                     </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <MessageSquare className="h-4 w-4" />
                     </div>
                   </div>
                   <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     3
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#C5A880]">
                     <ArrowUp className="h-3.5 w-3.5" />
                     <span>+1 novos hoje vs. ontem</span>
                   </div>
@@ -1008,14 +945,14 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                       Novos contatos hoje
                     </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <UserPlus className="h-4 w-4" />
                     </div>
                   </div>
                   <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     2
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#C5A880]">
                     <ArrowUp className="h-3.5 w-3.5" />
                     <span>+1 vs. ontem</span>
                   </div>
@@ -1025,13 +962,13 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Valor dos negócios abertos
+                      Valor em Aberto
                     </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <DollarSign className="h-4 w-4" />
                     </div>
                   </div>
-                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <p className={`mt-3 text-[28px] font-bold leading-none tabular-nums text-[#C5A880]`}>
                     R$ 0
                   </p>
                   <p className={`mt-2 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -1043,9 +980,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Mensagens enviadas hoje
+                      Mensagens enviadas
                     </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <Send className="h-4 w-4" />
                     </div>
                   </div>
@@ -1058,13 +995,13 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* 5. Reuniões Agendadas */}
+                {/* 5. Cortes Agendados */}
                 <div className={`rounded-xl border p-5 transition-all ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Reuniões Agendadas
+                      Cortes Agendados
                     </p>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-slate-800 text-[#C5A880]' : 'bg-[#C5A880]/15 text-[#C5A880]'}`}>
                       <Calendar className="h-4 w-4" />
                     </div>
                   </div>
@@ -1079,106 +1016,98 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
 
               {/* 5 Quick Action Pill Buttons */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                {/* 1. Novo contato */}
                 <button
                   type="button"
                   onClick={() => setNewContactModal(true)}
-                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:shadow-xs ${
+                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:border-[#C5A880]/60 hover:shadow-xs ${
                     isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
-                      : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80'
+                      : 'bg-white border-slate-200/90 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#C5A880]/15 text-[#C5A880] shrink-0">
                     <UserPlus className="h-4 w-4" />
                   </div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                     Novo contato
                   </span>
                 </button>
 
-                {/* 2. Novo negócio */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('pipelines')}
-                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:shadow-xs ${
+                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:border-[#C5A880]/60 hover:shadow-xs ${
                     isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
-                      : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80'
+                      : 'bg-white border-slate-200/90 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] shrink-0">
                     <Briefcase className="h-4 w-4" />
                   </div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                     Novo negócio
                   </span>
                 </button>
 
-                {/* 3. Novo agendamento */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('appointments')}
-                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:shadow-xs ${
+                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:border-[#C5A880]/60 hover:shadow-xs ${
                     isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
-                      : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80'
+                      : 'bg-white border-slate-200/90 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#C5A880]/15 text-[#C5A880] shrink-0">
                     <Calendar className="h-4 w-4" />
                   </div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                     Novo agendamento
                   </span>
                 </button>
 
-                {/* 4. Novo disparo */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('broadcasts')}
-                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:shadow-xs ${
+                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:border-[#C5A880]/60 hover:shadow-xs ${
                     isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
-                      : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80'
+                      : 'bg-white border-slate-200/90 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500 shrink-0">
                     <Radio className="h-4 w-4" />
                   </div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                     Novo disparo
                   </span>
                 </button>
 
-                {/* 5. Nova automação */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('automations')}
-                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:shadow-xs ${
+                  className={`group flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:border-[#C5A880]/60 hover:shadow-xs ${
                     isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
-                      : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80'
+                      : 'bg-white border-slate-200/90 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#C5A880]/15 text-[#C5A880] shrink-0">
                     <Zap className="h-4 w-4" />
                   </div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                     Nova automação
                   </span>
                 </button>
               </div>
 
-              {/* 2-Column Section (Conversas ao longo do tempo + Valor do pipeline) */}
+              {/* 2-Column Section */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                
-                {/* Left (3 cols): Conversas ao longo do tempo */}
                 <div className="h-full lg:col-span-3">
                   <ConversationsChart isDark={isDark} />
                 </div>
 
-                {/* Right (2 cols): Valor do pipeline */}
                 <div className="h-full lg:col-span-2">
                   <section className={`flex h-full flex-col rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                     <header className={`border-b px-5 py-4 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
@@ -1193,11 +1122,11 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     <div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-[280px]">
                       {crmMetrics.totalPipelineValue > 0 ? (
                         <div className="w-full space-y-4">
-                          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-3xl font-bold text-[#C5A880]">
                             {formatPrice(crmMetrics.totalPipelineValue)}
                           </div>
                           <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {crmLeads.length} leads monitorados no funil
+                            {crmLeads.length} clientes monitorados no funil
                           </p>
                           <div className="space-y-2 text-left pt-2">
                             <div className="flex justify-between text-xs">
@@ -1216,7 +1145,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                         </div>
                       ) : (
                         <div className="w-full rounded-xl border border-dashed p-8 flex flex-col items-center justify-center h-full">
-                          <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full border ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                          <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full border ${isDark ? 'bg-slate-800/80 border-slate-700 text-[#C5A880]' : 'bg-slate-50 border-slate-200 text-[#C5A880]'}`}>
                             <GitBranch className="h-6 w-6" />
                           </div>
                           <p className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
@@ -1236,12 +1165,11 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 2: AGENDAMENTOS (Barber Management System) */}
+          {/* VIEW 2: AGENDAMENTOS */}
           {/* ========================================================================= */}
           {activeTab === 'appointments' && (
             <div className="space-y-6">
               
-              {/* Header + Date Controls */}
               <div className={`rounded-xl border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`text-xs uppercase tracking-wider font-bold mr-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -1251,9 +1179,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   <button
                     type="button"
                     onClick={() => { setSelectedDate(getTodayStr()); fetchAppointments(getTodayStr()); }}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
                       selectedDate === getTodayStr()
-                        ? 'bg-[#0624C7] text-white shadow-xs'
+                        ? 'bg-[#C5A880] text-black shadow-xs'
                         : isDark
                         ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -1274,9 +1202,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                       setSelectedDate(dt);
                       fetchAppointments(dt);
                     }}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
                       selectedDate !== getTodayStr()
-                        ? 'bg-[#0624C7] text-white shadow-xs'
+                        ? 'bg-[#C5A880] text-black shadow-xs'
                         : isDark
                         ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -1286,7 +1214,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </button>
 
                   <div className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-                    <CalendarDays className="w-4 h-4 text-blue-600" />
+                    <CalendarDays className="w-4 h-4 text-[#C5A880]" />
                     <input
                       type="date"
                       value={selectedDate}
@@ -1301,16 +1229,15 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* View switcher */}
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Visualização:</span>
                   <div className={`flex rounded-lg p-1 border ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
                     <button
                       type="button"
                       onClick={() => setViewMode('table')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
                         viewMode === 'table'
-                          ? isDark ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-slate-900 shadow-xs'
+                          ? isDark ? 'bg-[#C5A880] text-black shadow-xs' : 'bg-[#C5A880] text-black shadow-xs'
                           : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
@@ -1319,9 +1246,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     <button
                       type="button"
                       onClick={() => setViewMode('timeline')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
                         viewMode === 'timeline'
-                          ? isDark ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-slate-900 shadow-xs'
+                          ? isDark ? 'bg-[#C5A880] text-black shadow-xs' : 'bg-[#C5A880] text-black shadow-xs'
                           : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
@@ -1337,7 +1264,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     Faturamento (Dia)
                   </span>
-                  <h3 className="text-2xl font-bold text-blue-600 mt-1">
+                  <h3 className="text-2xl font-bold text-[#C5A880] mt-1">
                     {formatPrice(
                       appointments
                         .filter((a) => a.status === 'CONFIRMED' || a.status === 'COMPLETED')
@@ -1380,7 +1307,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   <h3 className="text-2xl font-bold text-emerald-600 mt-1">
                     {views}
                   </h3>
-                  <p className="text-xs text-emerald-500 mt-1 flex items-center gap-1">
+                  <p className="text-xs text-emerald-500 mt-1 flex items-center gap-1 font-semibold">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Página Ativa
                   </p>
@@ -1397,7 +1324,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={`w-full rounded-lg border py-2 pl-9 pr-4 text-xs outline-none transition-all ${
-                      isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500'
+                      isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-[#C5A880]' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-[#C5A880]'
                     }`}
                   />
                 </div>
@@ -1408,9 +1335,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                       key={st}
                       type="button"
                       onClick={() => setStatusFilter(st)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                         statusFilter === st
-                          ? 'bg-[#0624C7] text-white'
+                          ? 'bg-[#C5A880] text-black shadow-xs'
                           : isDark
                           ? 'bg-slate-800 text-slate-400 hover:text-white'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -1430,11 +1357,11 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 </div>
               </div>
 
-              {/* Appointments List / Table */}
+              {/* Appointments List */}
               <div className={`rounded-xl border overflow-hidden ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                 {filteredAppointments.length === 0 ? (
                   <div className="p-12 text-center">
-                    <Calendar className="w-12 h-12 mx-auto text-slate-400 mb-3 opacity-50" />
+                    <Calendar className="w-12 h-12 mx-auto text-[#C5A880] mb-3 opacity-40" />
                     <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                       Nenhum agendamento encontrado para esta data ou filtro selecionado.
                     </p>
@@ -1444,7 +1371,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     {filteredAppointments.map((app) => (
                       <div key={app.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                         <div className="flex items-start gap-4">
-                          <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold shrink-0">
+                          <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-[#C5A880]/15 text-[#C5A880] font-bold shrink-0 border border-[#C5A880]/30">
                             <Clock className="w-4 h-4 mb-0.5" />
                             <span className="text-xs">
                               {new Date(app.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -1458,7 +1385,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                               </h4>
                               <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
                                 app.status === 'CONFIRMED'
-                                  ? 'bg-blue-500/10 text-blue-600'
+                                  ? 'bg-[#C5A880]/20 text-[#C5A880]'
                                   : app.status === 'COMPLETED'
                                   ? 'bg-emerald-500/10 text-emerald-600'
                                   : app.status === 'CANCELED'
@@ -1470,7 +1397,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             </div>
 
                             <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                              {app.service.name} • {app.barber.name} • <span className="font-semibold text-blue-600 dark:text-blue-400">{formatPrice(app.service.price)}</span>
+                              {app.service.name} • {app.barber.name} • <span className="font-bold text-[#C5A880]">{formatPrice(app.service.price)}</span>
                             </p>
                             <p className="text-xs text-slate-400 mt-0.5">
                               Tel: {app.client.phone}
@@ -1485,10 +1412,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             onClick={() =>
                               handleSendWhatsApp(
                                 app.client.phone,
-                                `Olá ${app.client.name}! Confirmando seu agendamento de ${app.service.name} hoje às ${new Date(app.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} na Barbearia do Alemão 777.`
+                                `Fala ${app.client.name}! Confirmando seu agendamento de ${app.service.name} hoje às ${new Date(app.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} na Barbearia do Alemão 777.`
                               )
                             }
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-xs"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                             WhatsApp
@@ -1498,7 +1425,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             <button
                               type="button"
                               onClick={() => handleUpdateStatus(app.id, 'CONFIRMED')}
-                              className="px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 text-xs font-semibold transition-colors"
+                              className="px-3 py-1.5 rounded-lg border border-[#C5A880] text-[#C5A880] hover:bg-[#C5A880]/10 text-xs font-bold transition-colors"
                             >
                               Confirmar
                             </button>
@@ -1508,7 +1435,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             <button
                               type="button"
                               onClick={() => handleUpdateStatus(app.id, 'COMPLETED')}
-                              className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+                              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs"
                             >
                               Concluir
                             </button>
@@ -1535,7 +1462,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 3: PIPELINES (5-Stage CRM Kanban Board) */}
+          {/* VIEW 3: PIPELINES */}
           {/* ========================================================================= */}
           {activeTab === 'pipelines' && (
             <div className="space-y-6">
@@ -1551,7 +1478,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 <button
                   type="button"
                   onClick={fetchCRMLeads}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors self-start sm:self-auto"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs self-start sm:self-auto"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loadingCRM ? 'animate-spin' : ''}`} />
                   Atualizar Funil
@@ -1560,7 +1487,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
 
               {/* Kanban Grid */}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
-                {/* Stage 1: Novos Leads */}
+                {/* 1. Novos Leads */}
                 <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -1579,8 +1506,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                           <p className="text-[11px] text-slate-500 mt-1">{lead.phone}</p>
                           <button
                             type="button"
-                            onClick={() => handleSendWhatsApp(lead.phone, `Olá ${lead.name}! Gostaria de agendar seu horário na Barbearia do Alemão?`)}
-                            className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1 text-[11px] font-semibold bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                            onClick={() => handleSendWhatsApp(lead.phone, `Fala ${lead.name}! Gostaria de agendar seu horário na Barbearia do Alemão 777?`)}
+                            className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1 text-[11px] font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700"
                           >
                             <MessageSquare className="w-3 h-3" /> WhatsApp
                           </button>
@@ -1589,13 +1516,13 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* Stage 2: Agendado */}
+                {/* 2. Agendado */}
                 <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-500">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#C5A880]">
                       Agendado
                     </span>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-bold">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#C5A880]/20 text-[#C5A880] text-[10px] font-bold">
                       {crmLeads.filter((l) => l.stage === 'CONFIRMED').length}
                     </span>
                   </div>
@@ -1603,10 +1530,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     {crmLeads
                       .filter((l) => l.stage === 'CONFIRMED')
                       .map((lead) => (
-                        <div key={lead.id} className={`rounded-lg border p-3 border-l-4 border-l-blue-500 ${isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                        <div key={lead.id} className={`rounded-lg border p-3 border-l-4 border-l-[#C5A880] ${isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                           <p className="font-semibold text-xs">{lead.name}</p>
                           <p className="text-[11px] text-slate-500 mt-0.5">{lead.nextAppointment?.serviceName}</p>
-                          <p className="text-[11px] text-blue-600 font-bold mt-1">
+                          <p className="text-[11px] text-[#C5A880] font-bold mt-1">
                             {lead.nextAppointment?.dateTime ? new Date(lead.nextAppointment.dateTime).toLocaleDateString('pt-BR') : ''}
                           </p>
                         </div>
@@ -1614,7 +1541,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* Stage 3: Concluído */}
+                {/* 3. Concluído */}
                 <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">
@@ -1637,14 +1564,14 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* Stage 4: Retorno (15-30 dias) - CRITICAL FOR RECURRENCE */}
-                <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] border-amber-400/40 bg-amber-50/20 dark:bg-amber-950/10`}>
-                  <div className="flex items-center justify-between pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5 text-amber-500" />
+                {/* 4. Retorno (15-30 dias) */}
+                <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] border-[#C5A880]/50 bg-[#C5A880]/5 dark:bg-[#C5A880]/10`}>
+                  <div className="flex items-center justify-between pb-3 border-b border-[#C5A880]/30">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#C5A880] flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-[#D4AF37]" />
                       Retorno (15-30d)
                     </span>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 font-bold text-[10px]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#C5A880]/20 text-[#C5A880] font-bold text-[10px]">
                       {crmLeads.filter((l) => l.stage === 'RETURN_DUE').length}
                     </span>
                   </div>
@@ -1652,10 +1579,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     {crmLeads
                       .filter((l) => l.stage === 'RETURN_DUE')
                       .map((lead) => (
-                        <div key={lead.id} className="rounded-lg border border-amber-300 dark:border-amber-800 bg-white dark:bg-slate-900 p-3 shadow-xs">
+                        <div key={lead.id} className="rounded-lg border border-[#C5A880]/40 bg-white dark:bg-slate-900 p-3 shadow-xs">
                           <div className="flex items-center justify-between">
                             <p className="font-bold text-xs">{lead.name}</p>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 font-semibold">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C5A880]/20 text-[#C5A880] font-bold">
                               {lead.daysSinceLastVisit} dias
                             </span>
                           </div>
@@ -1665,10 +1592,10 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             onClick={() =>
                               handleSendWhatsApp(
                                 lead.phone,
-                                `Fala ${lead.name}! Já faz ${lead.daysSinceLastVisit || 20} dias desde seu último corte. Bora alinhar o visual essa semana? Reservo seu horário agora!`
+                                `Fala ${lead.name}! Já faz ${lead.daysSinceLastVisit || 20} dias desde seu último corte aqui no Alemão 777. Bora alinhar o visual essa semana? Reservo seu horário agora!`
                               )
                             }
-                            className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors shadow-xs"
+                            className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold bg-[#C5A880] text-black rounded-md hover:bg-[#b0936f] transition-colors shadow-xs"
                           >
                             <Send className="w-3 h-3" /> Disparar Lembrete
                           </button>
@@ -1677,7 +1604,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* Stage 5: Inativo / VIP */}
+                {/* 5. VIP / Fidelizado */}
                 <div className={`rounded-xl border p-4 flex flex-col min-h-[450px] ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-bold uppercase tracking-wider text-purple-500">
@@ -1696,8 +1623,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                             <p className="font-semibold text-xs">{lead.name}</p>
                             <Award className="w-3.5 h-3.5 text-purple-500" />
                           </div>
-                          <p className="text-[11px] text-purple-600 font-bold mt-1">LTV: {formatPrice(lead.lifetimeValue)}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{lead.totalAppointments} visitas registradas</p>
+                          <p className="text-[11px] text-[#C5A880] font-bold mt-1">LTV: {formatPrice(lead.lifetimeValue)}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{lead.totalAppointments} visitas</p>
                         </div>
                       ))}
                   </div>
@@ -1724,7 +1651,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 <button
                   type="button"
                   onClick={() => setNewContactModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0624C7] text-white text-xs font-semibold hover:bg-blue-700 transition-colors shadow-xs"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs"
                 >
                   <UserPlus className="w-4 h-4" />
                   Novo Contato
@@ -1753,7 +1680,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     .map((client) => (
                       <div key={client.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 font-bold text-sm shrink-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C5A880]/20 text-[#C5A880] font-black text-sm shrink-0 border border-[#C5A880]/30">
                             {client.name.charAt(0)}
                           </div>
                           <div>
@@ -1765,11 +1692,11 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                         <div className="flex items-center gap-6">
                           <div className="hidden sm:block text-right">
                             <span className="text-xs font-semibold text-slate-500">LTV Acumulado</span>
-                            <p className="text-sm font-bold text-blue-600">{formatPrice(client.lifetimeValue)}</p>
+                            <p className="text-sm font-bold text-[#C5A880]">{formatPrice(client.lifetimeValue)}</p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => handleSendWhatsApp(client.phone, `Olá ${client.name}! Como podemos ajudar hoje?`)}
+                            onClick={() => handleSendWhatsApp(client.phone, `Fala ${client.name}! Como podemos ajudar hoje?`)}
                             className="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
                             title="Conversar no WhatsApp"
                           >
@@ -1784,7 +1711,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 5: CAIXA DE ENTRADA (Simulador de Chat / WhatsApp) */}
+          {/* VIEW 5: CAIXA DE ENTRADA */}
           {/* ========================================================================= */}
           {activeTab === 'inbox' && (
             <div className="space-y-6">
@@ -1798,35 +1725,33 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
               </div>
 
               <div className={`grid grid-cols-1 md:grid-cols-3 rounded-xl border overflow-hidden min-h-[500px] ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                {/* Conversations Sidebar */}
                 <div className={`border-r p-4 space-y-2 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Recentes</h3>
                   {appointments.slice(0, 5).map((app) => (
                     <div
                       key={app.id}
-                      onClick={() => handleSendWhatsApp(app.client.phone, `Olá ${app.client.name}! Tudo bem?`)}
+                      onClick={() => handleSendWhatsApp(app.client.phone, `Fala ${app.client.name}! Tudo bem?`)}
                       className={`p-3 rounded-lg border cursor-pointer transition-all ${
                         isDark ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-xs">{app.client.name}</span>
-                        <span className="text-[10px] text-slate-400">Hoje</span>
+                        <span className="text-[10px] text-[#C5A880] font-bold">Hoje</span>
                       </div>
                       <p className="text-[11px] text-slate-500 truncate mt-1">
-                        Agendamento de {app.service.name}
+                        {app.service.name} • {formatPrice(app.service.price)}
                       </p>
                     </div>
                   ))}
                 </div>
 
-                {/* Chat Preview */}
                 <div className="md:col-span-2 flex flex-col justify-between p-6">
                   <div className="space-y-4">
-                    <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs">
-                      <p className="font-semibold text-blue-600 dark:text-blue-400">Atendimento WhatsApp Conectado</p>
+                    <div className="p-4 rounded-xl bg-[#C5A880]/10 border border-[#C5A880]/30 text-xs">
+                      <p className="font-bold text-[#C5A880]">Atendimento WhatsApp Conectado - Barbearia do Alemão 777</p>
                       <p className="text-slate-500 mt-1">
-                        Você pode disparar notificações personalizadas para qualquer cliente com 1 clique direto no WhatsApp Web ou App.
+                        Dispare notificações personalizadas para qualquer cliente com 1 clique direto no WhatsApp.
                       </p>
                     </div>
                   </div>
@@ -1841,7 +1766,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     />
                     <button
                       type="button"
-                      className="px-4 py-2.5 rounded-lg bg-[#0624C7] text-white text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                      className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all flex items-center gap-1.5 shadow-xs"
                     >
                       <Send className="w-3.5 h-3.5" /> Enviar
                     </button>
@@ -1866,10 +1791,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Card 1: Próximos Cortes */}
                 <div className={`rounded-xl border p-5 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                  <h3 className="font-bold text-sm flex items-center gap-2 mb-3">
-                    <Clock className="w-4 h-4 text-blue-500" />
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-3 text-[#C5A880]">
+                    <Clock className="w-4 h-4 text-[#C5A880]" />
                     Agendamentos Próximos (&lt; 48h)
                   </h3>
                   <div className="space-y-3">
@@ -1881,8 +1805,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleSendWhatsApp(app.client.phone, `Olá ${app.client.name}! Lembramos que seu corte está confirmado para hoje às ${new Date(app.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}!`)}
-                          className="px-2.5 py-1 text-xs font-semibold rounded bg-blue-600 text-white hover:bg-blue-700"
+                          onClick={() => handleSendWhatsApp(app.client.phone, `Fala ${app.client.name}! Lembramos que seu corte está confirmado para hoje às ${new Date(app.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} no Alemão 777!`)}
+                          className="px-3 py-1 text-xs font-bold rounded bg-[#C5A880] text-black hover:bg-[#b0936f]"
                         >
                           Lembrar
                         </button>
@@ -1891,9 +1815,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                 </div>
 
-                {/* Card 2: Clientes para Retorno */}
                 <div className={`rounded-xl border p-5 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
-                  <h3 className="font-bold text-sm flex items-center gap-2 mb-3 text-amber-600">
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-3 text-amber-500">
                     <Flame className="w-4 h-4 text-amber-500" />
                     Lembretes de Retorno (15-30 dias)
                   </h3>
@@ -1906,8 +1829,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleSendWhatsApp(lead.phone, `Olá ${lead.name}! Passando para avisar que já faz ${lead.daysSinceLastVisit} dias do seu último corte. Que tal agendar para essa semana?`)}
-                          className="px-2.5 py-1 text-xs font-semibold rounded bg-amber-500 text-white hover:bg-amber-600"
+                          onClick={() => handleSendWhatsApp(lead.phone, `Fala ${lead.name}! Já faz ${lead.daysSinceLastVisit} dias do seu último corte no Alemão 777. Bora alinhar essa semana?`)}
+                          className="px-3 py-1 text-xs font-bold rounded bg-amber-500 text-white hover:bg-amber-600"
                         >
                           Enviar
                         </button>
@@ -1920,7 +1843,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 7: DISPAROS (WhatsApp Broadcast Tool) */}
+          {/* VIEW 7: DISPAROS */}
           {/* ========================================================================= */}
           {activeTab === 'broadcasts' && (
             <div className="space-y-6">
@@ -1929,7 +1852,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   Disparos & Campanhas de WhatsApp
                 </h2>
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Envie mensagens em lote ou individuais para fidelizar e reengajar clientes.
+                  Envie mensagens em lote ou individuais para fidelizar e reengajar clientes da barbearia.
                 </p>
               </div>
 
@@ -1944,8 +1867,8 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     }`}
                   >
                     <option value="manual">Destinatário Manual (Digitar telefone)</option>
-                    <option value="today">Todos os clientes com agendamento HOJE</option>
-                    <option value="tomorrow">Todos os clientes com agendamento AMANHÃ</option>
+                    <option value="today">Todos os clientes com corte agendado HOJE</option>
+                    <option value="tomorrow">Todos os clientes com corte agendado AMANHÃ</option>
                     <option value="return_due">Clientes na janela de retorno (15-30 dias sem visita)</option>
                     <option value="all">Toda a base de clientes cadastrada</option>
                   </select>
@@ -2036,14 +1959,14 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   {activeTab === 'automations' ? 'Automações Inteligentes' : activeTab === 'flows' ? 'Fluxos de Atendimento (BETA)' : 'Agentes de IA'}
                 </h2>
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Regras automáticas de retorno, disparo de confirmação 24h antes e atendente virtual.
+                  Regras automáticas de retorno, disparo de confirmação 24h antes e atendente virtual da Barbearia do Alemão 777.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className={`rounded-xl border p-5 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
+                    <span className="p-2 rounded-lg bg-[#C5A880]/20 text-[#C5A880]">
                       <Zap className="w-5 h-5" />
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 font-bold">
@@ -2058,7 +1981,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
 
                 <div className={`rounded-xl border p-5 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/90 shadow-sm'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="p-2 rounded-lg bg-amber-500/10 text-amber-600">
+                    <span className="p-2 rounded-lg bg-[#C5A880]/20 text-[#C5A880]">
                       <Clock className="w-5 h-5" />
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 font-bold">
@@ -2076,13 +1999,13 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                     <span className="p-2 rounded-lg bg-purple-500/10 text-purple-600">
                       <Bot className="w-5 h-5" />
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 font-bold">
-                      AGENTE IA
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C5A880]/20 text-[#C5A880] font-bold">
+                      BARBEIRO IA
                     </span>
                   </div>
                   <h4 className="font-bold text-sm">Assistente de Recepção</h4>
                   <p className="text-xs text-slate-500 mt-1">
-                    Sugere horários livres com base na disponibilidade em tempo real dos barbeiros.
+                    Sugere horários livres com base na disponibilidade em tempo real dos barbeiros Alemão e Johann.
                   </p>
                 </div>
               </div>
@@ -2090,7 +2013,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           )}
 
           {/* ========================================================================= */}
-          {/* VIEW 9: CONFIGURAÇÕES (CMS DA BARBEARIA) */}
+          {/* VIEW 9: CONFIGURAÇÕES */}
           {/* ========================================================================= */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
@@ -2156,7 +2079,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   <button
                     type="submit"
                     disabled={savingConfig}
-                    className="px-6 py-2.5 rounded-lg bg-[#0624C7] text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-xs"
+                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black text-xs font-bold hover:brightness-105 transition-all shadow-xs"
                   >
                     {savingConfig ? 'Salvando...' : 'Salvar Alterações'}
                   </button>
@@ -2168,9 +2091,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         </main>
       </div>
 
-      {/* ========================================================================= */}
       {/* MODAL: NOVO CONTATO */}
-      {/* ========================================================================= */}
       {newContactModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
           <div className={`w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-xl ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -2267,7 +2188,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   setNewContactData({ name: '', phone: '', email: '', notes: '' });
                   setActiveTab('pipelines');
                 }}
-                className="px-5 py-2 text-xs font-bold rounded-lg bg-[#0624C7] text-white hover:bg-blue-700 transition-colors shadow-xs"
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-[#C5A880] to-[#D4AF37] text-black hover:brightness-105 transition-all shadow-xs"
               >
                 Salvar Contato
               </button>
