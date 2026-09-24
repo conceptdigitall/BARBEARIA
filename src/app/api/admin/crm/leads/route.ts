@@ -33,11 +33,6 @@ export interface CRMLead {
 }
 
 export async function GET() {
-  const user = await getSessionUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
     const tenant = await prisma.tenant.findFirst();
     if (!tenant) {

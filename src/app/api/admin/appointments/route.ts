@@ -5,19 +5,19 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const user = await getSessionUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   const { searchParams } = new URL(request.url);
   const dateStr = searchParams.get('date'); // YYYY-MM-DD
 
   try {
+    const tenant = await prisma.tenant.findFirst();
+    if (!tenant) {
+      return NextResponse.json({ error: 'Nenhuma barbearia cadastrada' }, { status: 404 });
+    }
+
     let dateFilter = {};
     if (dateStr) {
-      const startOfDay = new Date(dateStr + 'T00:00:00');
-      const endOfDay = new Date(dateStr + 'T23:59:59.999');
+      const startOfDay = new Date(`${dateStr}T00:00:00-03:00`);
+      const endOfDay = new Date(`${dateStr}T23:59:59.999-03:00`);
       dateFilter = {
         dateTime: {
           gte: startOfDay,
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
 
     const rawAppointments = await prisma.appointment.findMany({
       where: {
+        tenantId: tenant.id,
         ...dateFilter,
       },
       include: {
@@ -76,8 +77,14 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json({ success: true, appointments });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching admin appointments:', error);
-    return NextResponse.json({ error: 'Erro ao buscar agendamentos' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Erro ao buscar agendamentos',
+        details: error?.message || String(error),
+      },
+      { status: 500 }
+    );
   }
 }
