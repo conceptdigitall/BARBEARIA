@@ -87,9 +87,16 @@ export async function GET(request: Request) {
       barbers,
       availabilities,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching availability:', error);
-    return NextResponse.json({ error: 'Erro interno ao carregar a disponibilidade' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Erro interno ao carregar a disponibilidade',
+        details: error?.message || String(error),
+        code: error?.code,
+      },
+      { status: 500 }
+    );
   }
 }
 

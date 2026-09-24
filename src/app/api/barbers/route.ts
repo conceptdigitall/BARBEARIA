@@ -27,8 +27,15 @@ export async function GET() {
     });
 
     return NextResponse.json({ success: true, barbers });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching barbers:', error);
-    return NextResponse.json({ error: 'Erro interno ao carregar barbeiros' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Erro interno ao carregar barbeiros',
+        details: error?.message || String(error),
+        code: error?.code,
+      },
+      { status: 500 }
+    );
   }
 }
