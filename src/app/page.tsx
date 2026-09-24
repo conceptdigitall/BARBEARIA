@@ -29,8 +29,15 @@ export default async function Home() {
       id: 'default-3',
       name: 'Combo Completo (Corte + Barba)',
       description: 'A experiência completa: corte refinado, barba com toalha quente e finalização vip.',
-      price: 70,
+      price: 75,
       durationMin: 60,
+    },
+    {
+      id: 'default-combo-sobrancelha',
+      name: 'Combo Corte + Barba + Sobrancelha',
+      description: 'Combo premium completo: corte refinado, barba com toalha quente e design de sobrancelha na navalha.',
+      price: 90,
+      durationMin: 75,
     },
     {
       id: 'default-4',

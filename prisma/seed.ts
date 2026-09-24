@@ -83,6 +83,13 @@ async function main() {
       tenantId: tenant.id,
     },
     {
+      name: 'Corte + Barba + Sobrancelha (Combo)',
+      description: 'Combo completo: corte de cabelo premium, barboterapia relaxante com toalha quente e design de sobrancelha na navalha.',
+      price: 90.00,
+      durationMin: 75,
+      tenantId: tenant.id,
+    },
+    {
       name: 'Sobrancelha',
       description: 'Design de sobrancelha feito com navalha para alinhar perfeitamente o seu rosto.',
       price: 20.00,

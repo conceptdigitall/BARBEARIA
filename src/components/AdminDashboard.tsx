@@ -39,6 +39,25 @@ import {
   Send,
   ArrowRight
 } from 'lucide-react';
+import { CRMSidebar, CRMTabId } from './crm/CRMSidebar';
+import { CRMHeader } from './crm/CRMHeader';
+import { PainelView } from './crm/PainelView';
+import { InboxView } from './crm/InboxView';
+import { AutomationsView } from './crm/AutomationsView';
+
+const tabTitles: Record<CRMTabId, string> = {
+  painel: 'Painel',
+  inbox: 'Caixa de Entrada',
+  notifications: 'Notificações',
+  contacts: 'Contatos & Clientes CRM',
+  pipelines: 'Pipelines & Funil',
+  appointments: 'Agendamentos & Horários',
+  broadcasts: 'Disparos WhatsApp',
+  automations: 'Automações & Gatilhos',
+  reports: 'Relatórios & Finanças',
+  availability: 'Escala Horária',
+  settings: 'Configurações',
+};
 
 export interface CRMLead {
   id: string;
@@ -101,8 +120,9 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ initialAppointments, tenant, views }: AdminDashboardProps) {
-  // Tabs: appointments | crm | notifications | reports | availability | whatsapp | cms
-  const [activeTab, setActiveTab] = useState<'appointments' | 'crm' | 'notifications' | 'reports' | 'availability' | 'whatsapp' | 'cms'>('appointments');
+  // Tabs: CRM Standard model
+  const [activeTab, setActiveTab] = useState<CRMTabId>('painel');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Date selection state
   const getTodayStr = () => {
@@ -336,7 +356,12 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   useEffect(() => {
     if (activeTab === 'reports') {
       fetchReport(reportMonth, reportYear);
-    } else if (activeTab === 'crm') {
+    } else if (
+      activeTab === 'painel' ||
+      activeTab === 'inbox' ||
+      activeTab === 'contacts' ||
+      activeTab === 'pipelines'
+    ) {
       fetchCRMLeads();
     }
   }, [activeTab, reportMonth, reportYear, fetchReport, fetchCRMLeads]);
@@ -567,173 +592,68 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-10 font-sans selection:bg-gold-primary selection:text-black">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Top Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-graphite-border pb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-gold-primary uppercase tracking-[0.2em] text-[11px] font-bold">
-                Painel Administrativo
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Sistema Online
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold font-serif text-white uppercase tracking-wider flex items-center gap-3">
-              <div className="relative w-9 h-9 rounded-full overflow-hidden border border-gold-primary/50 shadow-[0_0_12px_rgba(197,168,128,0.2)]">
-                <Image
-                  src="/logo.png"
-                  alt="Barbearia do Alemão 777"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <span>Barbearia do Alemão <span className="text-gold-primary">777</span></span>
-            </h1>
-          </div>
+    <div className="min-h-screen flex bg-[#090d16] text-slate-100 font-sans selection:bg-blue-600 selection:text-white">
+      {/* Sidebar Desktop & Mobile Drawer */}
+      <CRMSidebar
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'pipelines') setCrmView('kanban');
+          if (tab === 'contacts') setCrmView('list');
+        }}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        notificationCount={notificationCount}
+        returnDueCount={crmMetrics.returnDueCount}
+      />
 
-          {/* Top Info & Live Sync Status */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => fetchAppointments(selectedDate)}
-              disabled={loadingAppointments}
-              className="px-3.5 py-2 bg-graphite-dark hover:bg-white/5 border border-graphite-border text-xs text-white/80 hover:text-gold-primary flex items-center gap-2 transition-all"
-              title="Sincronizar agora"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingAppointments ? 'animate-spin text-gold-primary' : ''}`} />
-              <span className="hidden sm:inline">Atualizar</span>
-            </button>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <CRMHeader
+          title={tabTitles[activeTab]}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onRefresh={() => fetchAppointments(selectedDate)}
+          loading={loadingAppointments}
+          autoRefresh={autoRefreshEnabled}
+          onToggleAutoRefresh={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+        />
 
-            <button
-              onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-              className={`px-3 py-2 text-xs border flex items-center gap-1.5 transition-colors ${
-                autoRefreshEnabled 
-                  ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' 
-                  : 'border-graphite-border text-white/40 bg-graphite-dark'
-              }`}
-              title="Alternar atualização automática a cada 30 segundos"
-            >
-              <span className={`w-2 h-2 rounded-full ${autoRefreshEnabled ? 'bg-emerald-400 animate-ping' : 'bg-white/20'}`} />
-              <span>{autoRefreshEnabled ? 'Ao Vivo (30s)' : 'Sincronização Pausada'}</span>
-            </button>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+          {/* Painel: Exact CRM Standard Template */}
+          {activeTab === 'painel' && (
+            <PainelView
+              appointments={appointments}
+              crmLeads={crmLeads}
+              crmMetrics={crmMetrics}
+              onSelectTab={(tab) => {
+                setActiveTab(tab);
+                if (tab === 'pipelines') setCrmView('kanban');
+                if (tab === 'contacts') setCrmView('list');
+              }}
+              onSendReturnReminder={handleSendReturnReminder}
+              onSendDateApproachNotification={handleSendDateApproachNotification}
+              onDirectWhatsApp={handleDirectWhatsApp}
+            />
+          )}
 
-            <div className="text-xs text-white/60 bg-graphite-dark px-4 py-2 border border-graphite-border hidden lg:block">
-              Hoje: {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
-            </div>
-          </div>
-        </header>
+          {/* Inbox: WhatsApp Chat Simulation */}
+          {activeTab === 'inbox' && (
+            <InboxView
+              crmLeads={crmLeads}
+              onSendReturnReminder={handleSendReturnReminder}
+              onSendDateApproachNotification={handleSendDateApproachNotification}
+            />
+          )}
 
-        {/* Tab Navigation */}
-        <nav className="flex overflow-x-auto border-b border-graphite-border gap-1 sm:gap-2 pb-px no-scrollbar">
-          {/* Tab 1: Agenda / Agendamentos */}
-          <button
-            onClick={() => setActiveTab('appointments')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'appointments'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Calendar className="w-4 h-4" />
-            Agenda & Horários
-          </button>
+          {/* Automations: Intelligent WhatsApp triggers */}
+          {activeTab === 'automations' && (
+            <AutomationsView />
+          )}
 
-          {/* Tab: CRM & Funil de Leads */}
-          <button
-            onClick={() => setActiveTab('crm')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap relative ${
-              activeTab === 'crm'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            CRM & Funil de Leads
-            {crmMetrics.returnDueCount > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">
-                {crmMetrics.returnDueCount} retorno{crmMetrics.returnDueCount > 1 ? 's' : ''}
-              </span>
-            )}
-          </button>
-
-          {/* Tab 2: Notificações (com badge) */}
-          <button
-            onClick={() => setActiveTab('notifications')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap relative ${
-              activeTab === 'notifications'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Bell className="w-4 h-4" />
-            Notificações
-            {notificationCount > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-rose-500 text-white animate-pulse">
-                {notificationCount}
-              </span>
-            )}
-          </button>
-
-          {/* Tab 3: Relatórios & Faturamento Mensal */}
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'reports'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Relatórios & Finanças
-          </button>
-
-          {/* Tab 4: Escala Horária */}
-          <button
-            onClick={() => setActiveTab('availability')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'availability'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            Escala Horária
-          </button>
-
-          {/* Tab 5: Disparos WhatsApp */}
-          <button
-            onClick={() => setActiveTab('whatsapp')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'whatsapp'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            Disparos WhatsApp
-          </button>
-
-          {/* Tab 6: Configurações do Site (CMS) */}
-          <button
-            onClick={() => setActiveTab('cms')}
-            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'cms'
-                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
-                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            Configurações
-          </button>
-        </nav>
-
-        {/* ========================================================================= */}
-        {/* TAB 1: AGENDA EM TEMPO REAL & GESTÃO DE HORÁRIOS */}
-        {/* ========================================================================= */}
-        {activeTab === 'appointments' && (
+          {/* ========================================================================= */}
+          {/* TAB: AGENDA EM TEMPO REAL & GESTÃO DE HORÁRIOS */}
+          {/* ========================================================================= */}
+          {activeTab === 'appointments' && (
           <div className="space-y-6">
             
             {/* Quick Date Picker & View Switcher Bar */}
@@ -1134,9 +1054,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         )}
 
         {/* ========================================================================= */}
-        {/* TAB: CRM CONCEPT — ENGENHARIA DE VENDAS & FUNIL DE LEADS */}
+        {/* TAB: CRM CONCEPT — CONTATOS & PIPELINES DE VENDAS */}
         {/* ========================================================================= */}
-        {activeTab === 'crm' && (
+        {(activeTab === 'contacts' || activeTab === 'pipelines') && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -2169,9 +2089,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 5: DISPAROS DE WHATSAPP APRIMORADOS */}
+        {/* TAB: DISPAROS DE WHATSAPP APRIMORADOS */}
         {/* ========================================================================= */}
-        {activeTab === 'whatsapp' && (
+        {activeTab === 'broadcasts' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -2436,9 +2356,9 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 6: CONFIGURAÇÕES DO SITE (CMS) */}
+        {/* TAB: CONFIGURAÇÕES DA BARBEARIA (CMS) */}
         {/* ========================================================================= */}
-        {activeTab === 'cms' && (
+        {activeTab === 'settings' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -2572,51 +2492,53 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           </motion.div>
         )}
 
-        {/* Modal Simulação de WhatsApp */}
-        {simulationResult && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="glass-panel max-w-md w-full p-6 space-y-6 relative border border-gold-primary/20"
-            >
-              <button 
-                onClick={() => setSimulationResult(null)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="flex items-center gap-3 border-b border-graphite-border pb-4">
-                <div className="p-2 bg-gold-primary/10 text-gold-primary">
-                  <MessageCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-serif text-lg font-bold text-white uppercase tracking-wide">Simulação de WhatsApp</h4>
-                  <p className="text-xs text-white/40 font-light">Destinatário: {simulationResult.phone}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs text-white/40 font-bold uppercase tracking-wider">Conteúdo da Mensagem</label>
-                <div className="bg-black/40 border border-graphite-border p-4 text-sm text-white/85 leading-relaxed font-mono whitespace-pre-wrap">
-                  {simulationResult.message}
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setSimulationResult(null)}
-                  className="px-6 py-2.5 bg-gold-primary hover:bg-gold-hover text-black font-bold text-xs tracking-wider uppercase transition-all duration-300"
-                >
-                  Fechar Simulação
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
+        </main>
       </div>
+
+      {/* Modal Simulação de WhatsApp */}
+      {simulationResult && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-panel max-w-md w-full p-6 space-y-6 relative border border-gold-primary/20"
+          >
+            <button 
+              onClick={() => setSimulationResult(null)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 border-b border-graphite-border pb-4">
+              <div className="p-2 bg-gold-primary/10 text-gold-primary">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-serif text-lg font-bold text-white uppercase tracking-wide">Simulação de WhatsApp</h4>
+                <p className="text-xs text-white/40 font-light">Destinatário: {simulationResult.phone}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs text-white/40 font-bold uppercase tracking-wider">Conteúdo da Mensagem</label>
+              <div className="bg-black/40 border border-graphite-border p-4 text-sm text-white/85 leading-relaxed font-mono whitespace-pre-wrap">
+                {simulationResult.message}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSimulationResult(null)}
+                className="px-6 py-2.5 bg-gold-primary hover:bg-gold-hover text-black font-bold text-xs tracking-wider uppercase transition-all duration-300"
+              >
+                Fechar Simulação
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }
