@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Navbar from './Navbar';
 import Hero from './Hero';
 import About from './About';
@@ -107,10 +108,20 @@ export default function LandingPageWrapper({ services, siteConfig }: LandingPage
           
           {/* Column 1: Brand & Contact */}
           <div className="lg:col-span-4 flex flex-col items-start gap-4">
-            <span className="font-serif text-lg font-black tracking-[0.2em] text-white">
-              ALEMÃO <span className="text-gold-primary">777</span>
-            </span>
-            <p className="text-xs font-light text-white/40 leading-relaxed max-w-xs mt-2">
+            <div className="flex items-center gap-3">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-gold-primary/50 shadow-[0_0_15px_rgba(197,168,128,0.2)]">
+                <Image
+                  src="/logo.png"
+                  alt="Barbearia do Alemão 777"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="font-serif text-lg font-black tracking-[0.2em] text-white">
+                ALEMÃO <span className="text-gold-primary">777</span>
+              </span>
+            </div>
+            <p className="text-xs font-light text-white/40 leading-relaxed max-w-xs mt-1">
               Estilo é Escolha, Confiança é Resultado! Vivencie o cuidado premium que você merece em Cubatão - SP.
             </p>
             <div className="text-xs font-light space-y-1.5 mt-2">

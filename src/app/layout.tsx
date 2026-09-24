@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     url: "https://barbeariadoalemao777.com.br",
     type: "website",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export const viewport: Viewport = {

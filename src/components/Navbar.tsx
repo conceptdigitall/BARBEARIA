@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface NavbarProps {
   onBookingClick: () => void;
@@ -56,8 +57,8 @@ export default function Navbar({ onBookingClick, heroName }: NavbarProps) {
       <nav
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
           scrolled
-            ? 'bg-[#0A0A0B]/90 backdrop-blur-md border-b border-graphite-border/60 py-4 shadow-lg'
-            : 'bg-transparent py-6'
+            ? 'bg-[#0A0A0B]/90 backdrop-blur-md border-b border-graphite-border/60 py-3 shadow-lg'
+            : 'bg-transparent py-5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -65,11 +66,22 @@ export default function Navbar({ onBookingClick, heroName }: NavbarProps) {
           <a
             href="#"
             onClick={(e) => handleLinkClick(e, '#')}
-            className="font-serif text-lg md:text-xl font-black tracking-[0.2em] text-white hover:opacity-90 transition-opacity"
+            className="flex items-center gap-3 group hover:opacity-90 transition-opacity"
           >
-            {heroName?.split(' ')[0] || 'ALEMÃO'}{' '}
-            <span className="text-gold-primary">
-              {heroName?.split(' ').slice(1).join(' ') || '777'}
+            <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border border-gold-primary/50 shadow-[0_0_15px_rgba(197,168,128,0.25)] group-hover:border-gold-primary transition-all duration-300">
+              <Image
+                src="/logo.png"
+                alt="Barbearia do Alemão 777"
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+            <span className="font-serif text-base sm:text-lg md:text-xl font-black tracking-[0.15em] sm:tracking-[0.2em] text-white">
+              {heroName?.split(' ')[0] || 'ALEMÃO'}{' '}
+              <span className="text-gold-primary">
+                {heroName?.split(' ').slice(1).join(' ') || '777'}
+              </span>
             </span>
           </a>
 
@@ -116,9 +128,31 @@ export default function Navbar({ onBookingClick, heroName }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-45 bg-[#0A0A0B] pt-24 px-6 flex flex-col justify-between pb-12 md:hidden"
+            className="fixed inset-0 z-45 bg-[#0A0A0B] pt-20 px-6 flex flex-col justify-between pb-12 md:hidden"
           >
             <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-graphite-border/40">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-gold-primary/50 shadow-[0_0_15px_rgba(197,168,128,0.25)]">
+                  <Image
+                    src="/logo.png"
+                    alt="Barbearia do Alemão 777"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <span className="font-serif text-lg font-black tracking-[0.15em] text-white block">
+                    {heroName?.split(' ')[0] || 'ALEMÃO'}{' '}
+                    <span className="text-gold-primary">
+                      {heroName?.split(' ').slice(1).join(' ') || '777'}
+                    </span>
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-semibold">
+                    Cubatão - SP
+                  </span>
+                </div>
+              </div>
+
               {navLinks.map((link, index) => (
                 <motion.a
                   initial={{ opacity: 0, x: -20 }}

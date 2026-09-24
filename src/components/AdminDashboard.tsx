@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, 
@@ -25,8 +26,47 @@ import {
   ChevronRight,
   AlertCircle,
   Sparkles,
-  Scissors
+  Scissors,
+  Users,
+  Kanban,
+  RotateCcw,
+  Award,
+  Clock4,
+  Flame,
+  UserPlus,
+  CheckCircle2,
+  PhoneCall,
+  Send,
+  ArrowRight
 } from 'lucide-react';
+
+export interface CRMLead {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  stage: 'NEW_LEAD' | 'CONFIRMED' | 'COMPLETED' | 'RETURN_DUE' | 'VIP';
+  totalAppointments: number;
+  completedAppointments: number;
+  lifetimeValue: number;
+  daysSinceLastVisit: number | null;
+  lastVisitDate: string | null;
+  lastService: string | null;
+  lastBarber: string | null;
+  nextAppointment: {
+    id: string;
+    dateTime: string;
+    serviceName: string;
+    price: number;
+    status: string;
+    barberName: string;
+  } | null;
+  isReturnDue: boolean;
+  isUpcomingSoon: boolean;
+  recommendedAction: 'RETURN_REMINDER' | 'DATE_APPROACH_REMINDER' | 'CONFIRM_BOOKING' | 'RETAINED';
+  whatsappSentAt?: string | null;
+  createdAt: string;
+}
 
 interface Appointment {
   id: string;
@@ -61,8 +101,8 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ initialAppointments, tenant, views }: AdminDashboardProps) {
-  // Tabs: appointments | notifications | reports | availability | whatsapp | cms
-  const [activeTab, setActiveTab] = useState<'appointments' | 'notifications' | 'reports' | 'availability' | 'whatsapp' | 'cms'>('appointments');
+  // Tabs: appointments | crm | notifications | reports | availability | whatsapp | cms
+  const [activeTab, setActiveTab] = useState<'appointments' | 'crm' | 'notifications' | 'reports' | 'availability' | 'whatsapp' | 'cms'>('appointments');
   
   // Date selection state
   const getTodayStr = () => {
@@ -125,6 +165,20 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
   const [reportData, setReportData] = useState<any>(null);
   const [loadingReport, setLoadingReport] = useState(false);
 
+  // CRM & Funil de Leads State
+  const [crmLeads, setCrmLeads] = useState<CRMLead[]>([]);
+  const [crmMetrics, setCrmMetrics] = useState({
+    totalLeads: 0,
+    returnDueCount: 0,
+    upcomingSoonCount: 0,
+    vipCount: 0,
+    totalPipelineValue: 0,
+  });
+  const [loadingCRM, setLoadingCRM] = useState(false);
+  const [crmFilter, setCrmFilter] = useState<'ALL' | 'RETURN_DUE' | 'UPCOMING' | 'VIP' | 'NEW'>('ALL');
+  const [crmSearch, setCrmSearch] = useState('');
+  const [crmView, setCrmView] = useState<'kanban' | 'list'>('kanban');
+
   // Notification tab state: unread notifications count
   const pendingAppointments = useMemo(() => {
     return appointments.filter(a => a.status === 'PENDING_CONFIRMATION');
@@ -177,7 +231,58 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
     }
   }, []);
 
-  // Fetch availability and clients on mount
+  // Fetch CRM Leads
+  const fetchCRMLeads = useCallback(async () => {
+    setLoadingCRM(true);
+    try {
+      const res = await fetch('/api/admin/crm/leads');
+      if (res.ok) {
+        const data = await res.json();
+        setCrmLeads(data.leads || []);
+        if (data.metrics) {
+          setCrmMetrics(data.metrics);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching CRM leads:', err);
+    } finally {
+      setLoadingCRM(false);
+    }
+  }, []);
+
+  // WhatsApp Smart Action: Lembrete de Retorno (Fidelização 15-30 dias)
+  const handleSendReturnReminder = (lead: CRMLead) => {
+    const cleanPhone = lead.phone.replace(/\D/g, '');
+    const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const days = lead.daysSinceLastVisit ?? 20;
+    const serviceInfo = lead.lastService ? ` (${lead.lastService})` : '';
+    const text = `Fala, *${lead.name}*! 💈 Barbearia do Alemão 777 passando por aqui.\n\nJá se passaram *${days} dias* desde o seu último corte${serviceInfo}! Que tal manter o degradê e o visual de respeito alinhados para esta semana?\n\nGaranta seu horário com praticidade pelo nosso site ou me avise aqui o melhor dia e horário pra você! ✂️🇩🇪`;
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  // WhatsApp Smart Action: Notificação de Data Próxima (<48h)
+  const handleSendDateApproachNotification = (lead: CRMLead) => {
+    if (!lead.nextAppointment) return;
+    const cleanPhone = lead.phone.replace(/\D/g, '');
+    const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const dateFormatted = new Date(lead.nextAppointment.dateTime).toLocaleDateString('pt-BR');
+    const timeFormatted = new Date(lead.nextAppointment.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const text = `Olá, *${lead.name}*! 💈 Passando para lembrar do seu corte na Barbearia do Alemão 777 agendado para o dia *${dateFormatted}* às *${timeFormatted}* (${lead.nextAppointment.serviceName}).\n\nTe esperamos no horário combinado! Podemos confirmar sua presença? ✂️🇩🇪`;
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  // WhatsApp General Direct Message
+  const handleDirectLeadWhatsApp = (lead: CRMLead, customGreeting?: string) => {
+    const cleanPhone = lead.phone.replace(/\D/g, '');
+    const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const text = customGreeting || `Olá, *${lead.name}*! 💈 Barbearia do Alemão 777 por aqui. Como posso ajudar você hoje? ✂️`;
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  // Fetch availability, clients, and CRM leads on mount
   useEffect(() => {
     const fetchAvailability = async () => {
       setLoadingAvailability(true);
@@ -224,14 +329,17 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
 
     fetchAvailability();
     fetchClients();
-  }, []);
+    fetchCRMLeads();
+  }, [fetchCRMLeads]);
 
   // Fetch reports when tab changes or month/year changes
   useEffect(() => {
     if (activeTab === 'reports') {
       fetchReport(reportMonth, reportYear);
+    } else if (activeTab === 'crm') {
+      fetchCRMLeads();
     }
-  }, [activeTab, reportMonth, reportYear, fetchReport]);
+  }, [activeTab, reportMonth, reportYear, fetchReport, fetchCRMLeads]);
 
   // Handle date change
   const handleDateChange = (newDateStr: string) => {
@@ -474,8 +582,16 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                 Sistema Online
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-white uppercase tracking-wider flex items-center gap-3">
-              BarberConnect
+            <h1 className="text-2xl sm:text-3xl font-bold font-serif text-white uppercase tracking-wider flex items-center gap-3">
+              <div className="relative w-9 h-9 rounded-full overflow-hidden border border-gold-primary/50 shadow-[0_0_12px_rgba(197,168,128,0.2)]">
+                <Image
+                  src="/logo.png"
+                  alt="Barbearia do Alemão 777"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span>Barbearia do Alemão <span className="text-gold-primary">777</span></span>
             </h1>
           </div>
 
@@ -523,6 +639,24 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
           >
             <Calendar className="w-4 h-4" />
             Agenda & Horários
+          </button>
+
+          {/* Tab: CRM & Funil de Leads */}
+          <button
+            onClick={() => setActiveTab('crm')}
+            className={`px-4 sm:px-5 py-3 font-serif text-xs font-bold uppercase tracking-widest transition-all duration-200 border-b-2 flex items-center gap-2 whitespace-nowrap relative ${
+              activeTab === 'crm'
+                ? 'border-gold-primary text-gold-primary bg-gold-primary/5'
+                : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            CRM & Funil de Leads
+            {crmMetrics.returnDueCount > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">
+                {crmMetrics.returnDueCount} retorno{crmMetrics.returnDueCount > 1 ? 's' : ''}
+              </span>
+            )}
           </button>
 
           {/* Tab 2: Notificações (com badge) */}
@@ -997,6 +1131,538 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
             )}
 
           </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: CRM CONCEPT — ENGENHARIA DE VENDAS & FUNIL DE LEADS */}
+        {/* ========================================================================= */}
+        {activeTab === 'crm' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Top CRM Banner with Alemão 777 Luxury Aesthetic */}
+            <div className="glass-panel p-6 sm:p-8 border border-gold-primary/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-gold-primary/5 rounded-full blur-3xl -z-10 pointer-events-none" />
+              
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold-primary bg-gold-primary/10 border border-gold-primary/20 px-3 py-1">
+                      CRM Concept • Engenharia de Vendas
+                    </span>
+                    <span className="text-xs text-white/40">• Barbearia do Alemão 777</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white uppercase tracking-wider flex items-center gap-3">
+                    <Users className="w-7 h-7 text-gold-primary" />
+                    <span>Funil de Leads & Fidelização de Clientes</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/50 max-w-2xl mt-1.5 leading-relaxed">
+                    Sincronização em tempo real de agendamentos como leads, gestão do ciclo de vida dos clientes, lembretes de retorno (15 a 30+ dias) e notificações proativas de data no WhatsApp.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={fetchCRMLeads}
+                    disabled={loadingCRM}
+                    className="px-4 py-2.5 bg-graphite-dark hover:bg-white/5 border border-graphite-border hover:border-gold-primary/40 text-xs font-semibold text-white/80 hover:text-gold-primary flex items-center gap-2 transition-all shadow-sm"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loadingCRM ? 'animate-spin text-gold-primary' : ''}`} />
+                    <span>Sincronizar Leads</span>
+                  </button>
+
+                  {/* View Mode Switcher */}
+                  <div className="flex items-center bg-graphite-dark border border-graphite-border p-1">
+                    <button
+                      onClick={() => setCrmView('kanban')}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+                        crmView === 'kanban'
+                          ? 'bg-gold-primary text-black shadow-sm'
+                          : 'text-white/50 hover:text-white'
+                      }`}
+                    >
+                      <Kanban className="w-3.5 h-3.5" />
+                      Funil Kanban
+                    </button>
+                    <button
+                      onClick={() => setCrmView('list')}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+                        crmView === 'list'
+                          ? 'bg-gold-primary text-black shadow-sm'
+                          : 'text-white/50 hover:text-white'
+                      }`}
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      Lista Geral
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5 Quick KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-8 pt-6 border-t border-graphite-border/70">
+                {/* Metric 1 */}
+                <div className="p-4 bg-graphite-dark/60 border border-graphite-border/60 relative group hover:border-gold-primary/30 transition-all">
+                  <div className="flex items-center justify-between text-white/40 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Total de Leads</span>
+                    <Users className="w-4 h-4 text-gold-primary" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-white">{crmMetrics.totalLeads}</div>
+                  <span className="text-[10px] text-white/40">Base de clientes ativa</span>
+                </div>
+
+                {/* Metric 2: Retorno Pendente */}
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 relative group hover:border-amber-500 transition-all">
+                  <div className="flex items-center justify-between text-amber-400 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Retorno Pendente</span>
+                    <RotateCcw className="w-4 h-4 animate-spin-slow" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-amber-400">{crmMetrics.returnDueCount}</div>
+                  <span className="text-[10px] text-amber-300/70 font-medium">15 a 30+ dias sem cortar</span>
+                </div>
+
+                {/* Metric 3: Cortes Próximos */}
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 relative group hover:border-emerald-500 transition-all">
+                  <div className="flex items-center justify-between text-emerald-400 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Cortes se Aproximando</span>
+                    <Clock4 className="w-4 h-4" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-emerald-400">{crmMetrics.upcomingSoonCount}</div>
+                  <span className="text-[10px] text-emerald-300/70 font-medium">Próximas 24h a 48h</span>
+                </div>
+
+                {/* Metric 4: VIPs */}
+                <div className="p-4 bg-purple-500/10 border border-purple-500/30 relative group hover:border-purple-500 transition-all">
+                  <div className="flex items-center justify-between text-purple-400 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Clientes VIPs</span>
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-purple-300">{crmMetrics.vipCount}</div>
+                  <span className="text-[10px] text-purple-300/70 font-medium">3+ cortes realizados</span>
+                </div>
+
+                {/* Metric 5: LTV Total */}
+                <div className="p-4 bg-graphite-dark/60 border border-graphite-border/60 relative group hover:border-gold-primary/30 transition-all col-span-2 sm:col-span-1">
+                  <div className="flex items-center justify-between text-white/40 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">LTV Acumulado</span>
+                    <DollarSign className="w-4 h-4 text-gold-primary" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-gold-primary">
+                    {formatPrice(crmMetrics.totalPipelineValue)}
+                  </div>
+                  <span className="text-[10px] text-white/40">Faturamento em clientes</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="glass-panel p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border border-gold-primary/10">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={crmSearch}
+                  onChange={(e) => setCrmSearch(e.target.value)}
+                  placeholder="Buscar lead por nome, telefone ou serviço..."
+                  className="w-full pl-10 pr-4 py-2 bg-graphite-dark border border-graphite-border focus:border-gold-primary text-white text-xs outline-none"
+                />
+              </div>
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-wider text-white/40 font-bold mr-1">Filtrar:</span>
+                
+                <button
+                  onClick={() => setCrmFilter('ALL')}
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border transition-all ${
+                    crmFilter === 'ALL'
+                      ? 'bg-gold-primary text-black border-gold-primary'
+                      : 'bg-graphite-dark text-white/70 border-graphite-border hover:text-white'
+                  }`}
+                >
+                  Todos ({crmLeads.length})
+                </button>
+
+                <button
+                  onClick={() => setCrmFilter('RETURN_DUE')}
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+                    crmFilter === 'RETURN_DUE'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-graphite-dark text-amber-400 border-amber-500/30 hover:border-amber-500'
+                  }`}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Retorno Pendente ({crmMetrics.returnDueCount})
+                </button>
+
+                <button
+                  onClick={() => setCrmFilter('UPCOMING')}
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+                    crmFilter === 'UPCOMING'
+                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                      : 'bg-graphite-dark text-emerald-400 border-emerald-500/30 hover:border-emerald-500'
+                  }`}
+                >
+                  <Clock4 className="w-3 h-3" />
+                  Cortes Próximos ({crmMetrics.upcomingSoonCount})
+                </button>
+
+                <button
+                  onClick={() => setCrmFilter('VIP')}
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+                    crmFilter === 'VIP'
+                      ? 'bg-purple-500 text-black border-purple-500 font-bold'
+                      : 'bg-graphite-dark text-purple-300 border-purple-500/30 hover:border-purple-500'
+                  }`}
+                >
+                  <Award className="w-3 h-3" />
+                  VIPs ({crmMetrics.vipCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Main CRM View: KANBAN BOARD */}
+            {crmView === 'kanban' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-start">
+                {[
+                  {
+                    stageId: 'NEW_LEAD',
+                    title: 'Novos Leads',
+                    subtitle: 'A Confirmar Horário',
+                    color: 'border-amber-500/40',
+                    headerBg: 'bg-amber-500/10',
+                    textCol: 'text-amber-400',
+                    dotCol: 'bg-amber-400',
+                  },
+                  {
+                    stageId: 'CONFIRMED',
+                    title: 'Confirmados',
+                    subtitle: 'Próximos Agendamentos',
+                    color: 'border-emerald-500/40',
+                    headerBg: 'bg-emerald-500/10',
+                    textCol: 'text-emerald-400',
+                    dotCol: 'bg-emerald-400',
+                  },
+                  {
+                    stageId: 'COMPLETED',
+                    title: 'Atendidos Recentes',
+                    subtitle: 'Visual em Dia (<14d)',
+                    color: 'border-blue-500/40',
+                    headerBg: 'bg-blue-500/10',
+                    textCol: 'text-blue-400',
+                    dotCol: 'bg-blue-400',
+                  },
+                  {
+                    stageId: 'RETURN_DUE',
+                    title: 'Retorno Pendente',
+                    subtitle: '15 a 30+ dias s/ corte',
+                    color: 'border-gold-primary/70',
+                    headerBg: 'bg-gold-primary/15',
+                    textCol: 'text-gold-primary',
+                    dotCol: 'bg-gold-primary',
+                    highlight: true,
+                  },
+                  {
+                    stageId: 'VIP',
+                    title: 'Clientes VIPs',
+                    subtitle: 'Frequência Contínua',
+                    color: 'border-purple-500/40',
+                    headerBg: 'bg-purple-500/10',
+                    textCol: 'text-purple-400',
+                    dotCol: 'bg-purple-400',
+                  },
+                ].map((col) => {
+                  // Filter leads for this column
+                  const columnLeads = crmLeads.filter((lead) => {
+                    const matchesSearch =
+                      crmSearch === '' ||
+                      lead.name.toLowerCase().includes(crmSearch.toLowerCase()) ||
+                      lead.phone.includes(crmSearch) ||
+                      (lead.lastService && lead.lastService.toLowerCase().includes(crmSearch.toLowerCase())) ||
+                      (lead.nextAppointment && lead.nextAppointment.serviceName.toLowerCase().includes(crmSearch.toLowerCase()));
+
+                    if (!matchesSearch) return false;
+
+                    if (crmFilter === 'RETURN_DUE') return lead.isReturnDue || lead.stage === 'RETURN_DUE';
+                    if (crmFilter === 'UPCOMING') return lead.isUpcomingSoon || (lead.nextAppointment !== null);
+                    if (crmFilter === 'VIP') return lead.stage === 'VIP' || lead.totalAppointments >= 3;
+                    if (crmFilter === 'NEW') return lead.stage === 'NEW_LEAD';
+
+                    return lead.stage === col.stageId;
+                  });
+
+                  const colTotalValue = columnLeads.reduce((sum, l) => sum + l.lifetimeValue, 0);
+
+                  return (
+                    <div
+                      key={col.stageId}
+                      className={`glass-panel border ${col.color} p-3.5 space-y-3 min-h-[500px] flex flex-col ${
+                        col.highlight ? 'shadow-[0_0_20px_rgba(197,168,128,0.1)]' : ''
+                      }`}
+                    >
+                      {/* Column Header */}
+                      <div className={`p-3 ${col.headerBg} border-b ${col.color} flex justify-between items-start`}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${col.dotCol} ${col.highlight ? 'animate-pulse' : ''}`} />
+                            <h4 className={`font-serif font-bold text-xs uppercase tracking-wider ${col.textCol}`}>
+                              {col.title}
+                            </h4>
+                          </div>
+                          <p className="text-[10px] text-white/40 mt-0.5">{col.subtitle}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 text-xs font-mono font-bold rounded-full ${col.headerBg} ${col.textCol} border ${col.color}`}>
+                          {columnLeads.length}
+                        </span>
+                      </div>
+
+                      {/* Column Total LTV */}
+                      <div className="text-[11px] text-white/50 px-1 flex justify-between items-center">
+                        <span>LTV da coluna:</span>
+                        <span className="font-bold text-white font-mono">{formatPrice(colTotalValue)}</span>
+                      </div>
+
+                      {/* Leads Cards Container */}
+                      <div className="space-y-3 flex-1 overflow-y-auto max-h-[680px] pr-1">
+                        {loadingCRM ? (
+                          <div className="py-12 text-center text-white/40 text-xs">
+                            <RefreshCw className="w-4 h-4 animate-spin text-gold-primary mx-auto mb-2" />
+                            <span>Carregando leads...</span>
+                          </div>
+                        ) : columnLeads.length === 0 ? (
+                          <div className="py-10 text-center text-white/30 text-[11px] border border-dashed border-white/10 p-4">
+                            Nenhum lead nesta etapa
+                          </div>
+                        ) : (
+                          columnLeads.map((lead) => (
+                            <div
+                              key={lead.id}
+                              className={`p-3.5 bg-graphite-dark/80 hover:bg-graphite-dark border transition-all duration-200 space-y-2.5 ${
+                                lead.isReturnDue
+                                  ? 'border-gold-primary/50 shadow-sm shadow-gold-primary/10'
+                                  : lead.isUpcomingSoon
+                                  ? 'border-emerald-500/50 shadow-sm shadow-emerald-500/10'
+                                  : 'border-graphite-border hover:border-white/20'
+                              }`}
+                            >
+                              {/* Lead Header */}
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0">
+                                  <h5 className="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                                    <span>{lead.name}</span>
+                                    {lead.totalAppointments >= 3 && (
+                                      <span title="Cliente VIP">
+                                        <Award className="w-3 h-3 text-gold-primary shrink-0" />
+                                      </span>
+                                    )}
+                                  </h5>
+                                  <p className="text-[10px] text-white/50 font-mono truncate">{lead.phone}</p>
+                                </div>
+
+                                <span className="text-[10px] font-mono font-bold text-gold-primary shrink-0">
+                                  {formatPrice(lead.lifetimeValue)}
+                                </span>
+                              </div>
+
+                              {/* Lead Context: Last Visit or Next Appointment */}
+                              {lead.nextAppointment ? (
+                                <div className="p-2 bg-emerald-950/20 border border-emerald-500/30 text-[11px] space-y-1">
+                                  <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                                    <Clock className="w-3 h-3" />
+                                    <span>
+                                      {new Date(lead.nextAppointment.dateTime).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}{' '}
+                                      às {new Date(lead.nextAppointment.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-white/70 truncate">{lead.nextAppointment.serviceName}</p>
+                                </div>
+                              ) : lead.daysSinceLastVisit !== null ? (
+                                <div className={`p-2 border text-[11px] space-y-0.5 ${
+                                  lead.daysSinceLastVisit >= 15
+                                    ? 'bg-amber-950/20 border-amber-500/40 text-amber-300'
+                                    : 'bg-graphite-light/40 border-graphite-border text-white/70'
+                                }`}>
+                                  <div className="flex justify-between items-center text-[10px]">
+                                    <span className="text-white/40">Último corte:</span>
+                                    <span className="font-bold font-mono">há {lead.daysSinceLastVisit} dias</span>
+                                  </div>
+                                  {lead.lastService && (
+                                    <p className="text-[10px] text-white/60 truncate">{lead.lastService}</p>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-white/40 italic">Sem cortes registrados ainda</div>
+                              )}
+
+                              {/* Quick WhatsApp Action Triggers */}
+                              <div className="pt-2 border-t border-graphite-border/70 flex flex-col gap-1.5">
+                                {/* If Return is Due: Prominent Gold Button */}
+                                {lead.isReturnDue && (
+                                  <button
+                                    onClick={() => handleSendReturnReminder(lead)}
+                                    className="w-full py-1.5 px-2 bg-gold-primary hover:bg-gold-hover text-black font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                                    title="Disparar convite de retorno com cálculo de dias no WhatsApp"
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    <span>Lembrete de Retorno</span>
+                                  </button>
+                                )}
+
+                                {/* If Upcoming Soon: Date Notification Button */}
+                                {lead.isUpcomingSoon && (
+                                  <button
+                                    onClick={() => handleSendDateApproachNotification(lead)}
+                                    className="w-full py-1.5 px-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/40 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                                    title="Notificar cliente sobre a proximidade do corte agendado"
+                                  >
+                                    <Clock4 className="w-3 h-3" />
+                                    <span>Notificar Data do Corte</span>
+                                  </button>
+                                )}
+
+                                {/* General WhatsApp Direct button */}
+                                {!lead.isReturnDue && !lead.isUpcomingSoon && (
+                                  <button
+                                    onClick={() => handleDirectLeadWhatsApp(lead)}
+                                    className="w-full py-1 px-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-graphite-border font-medium text-[10px] flex items-center justify-center gap-1 transition-colors"
+                                  >
+                                    <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                    <span>Conversar via WhatsApp</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* List / Table View of CRM Leads */}
+            {crmView === 'list' && (
+              <div className="glass-panel border border-gold-primary/10 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-graphite-border bg-graphite-dark text-[11px] font-bold uppercase tracking-wider text-white/60">
+                        <th className="p-4">Cliente / Contato</th>
+                        <th className="p-4">Estágio no Funil</th>
+                        <th className="p-4">Histórico</th>
+                        <th className="p-4">Última Visita</th>
+                        <th className="p-4">Próximo Corte</th>
+                        <th className="p-4">LTV Total</th>
+                        <th className="p-4 text-right">Ação WhatsApp</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-graphite-border">
+                      {crmLeads
+                        .filter((lead) => {
+                          const matchesSearch =
+                            crmSearch === '' ||
+                            lead.name.toLowerCase().includes(crmSearch.toLowerCase()) ||
+                            lead.phone.includes(crmSearch);
+                          if (!matchesSearch) return false;
+                          if (crmFilter === 'RETURN_DUE') return lead.isReturnDue;
+                          if (crmFilter === 'UPCOMING') return lead.isUpcomingSoon;
+                          if (crmFilter === 'VIP') return lead.totalAppointments >= 3;
+                          return true;
+                        })
+                        .map((lead) => (
+                          <tr key={lead.id} className="hover:bg-white/5 transition-colors">
+                            <td className="p-4">
+                              <div className="font-bold text-white text-xs">{lead.name}</div>
+                              <div className="text-[11px] text-white/50 font-mono">{lead.phone}</div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                lead.stage === 'RETURN_DUE'
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : lead.stage === 'CONFIRMED'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : lead.stage === 'VIP'
+                                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                  : lead.stage === 'COMPLETED'
+                                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                  : 'bg-white/10 text-white/70 border border-white/20'
+                              }`}>
+                                {lead.stage === 'RETURN_DUE' ? 'Retorno Pendente' :
+                                 lead.stage === 'CONFIRMED' ? 'Confirmado' :
+                                 lead.stage === 'VIP' ? 'Cliente VIP' :
+                                 lead.stage === 'COMPLETED' ? 'Atendido Recente' : 'Novo Lead'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-white/70">
+                              <span className="font-bold text-white">{lead.totalAppointments}</span> cortes ({lead.completedAppointments} concluídos)
+                            </td>
+                            <td className="p-4">
+                              {lead.daysSinceLastVisit !== null ? (
+                                <div>
+                                  <span className={`font-mono font-bold ${lead.daysSinceLastVisit >= 15 ? 'text-amber-400' : 'text-white'}`}>
+                                    há {lead.daysSinceLastVisit} dias
+                                  </span>
+                                  {lead.lastService && <div className="text-[10px] text-white/50">{lead.lastService}</div>}
+                                </div>
+                              ) : (
+                                <span className="text-white/30">—</span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {lead.nextAppointment ? (
+                                <div>
+                                  <div className="font-bold text-emerald-400 font-mono">
+                                    {new Date(lead.nextAppointment.dateTime).toLocaleDateString('pt-BR')}{' '}
+                                    {new Date(lead.nextAppointment.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                  <div className="text-[10px] text-white/60">{lead.nextAppointment.serviceName}</div>
+                                </div>
+                              ) : (
+                                <span className="text-white/30">Nenhum</span>
+                              )}
+                            </td>
+                            <td className="p-4 font-mono font-bold text-gold-primary">
+                              {formatPrice(lead.lifetimeValue)}
+                            </td>
+                            <td className="p-4 text-right">
+                              {lead.isReturnDue ? (
+                                <button
+                                  onClick={() => handleSendReturnReminder(lead)}
+                                  className="px-3 py-1.5 bg-gold-primary hover:bg-gold-hover text-black font-bold text-[10px] uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  Lembrete de Retorno
+                                </button>
+                              ) : lead.isUpcomingSoon ? (
+                                <button
+                                  onClick={() => handleSendDateApproachNotification(lead)}
+                                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/30 font-bold text-[10px] uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+                                >
+                                  <Clock4 className="w-3 h-3" />
+                                  Notificar Data
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleDirectLeadWhatsApp(lead)}
+                                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-graphite-border font-medium text-[10px] transition-colors inline-flex items-center gap-1.5"
+                                >
+                                  <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                  WhatsApp
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </motion.div>
         )}
 
         {/* ========================================================================= */}

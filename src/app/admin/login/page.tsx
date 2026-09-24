@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Lock, Mail, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,14 +66,23 @@ export default function LoginPage() {
         <div className="glass-panel p-10 border border-gold-primary/10 flex flex-col items-center">
           
           {/* Logo / Header */}
-          <div className="text-center mb-8">
-            <span className="text-gold-primary uppercase tracking-[0.3em] text-xs font-semibold block mb-2">
+          <div className="text-center mb-8 flex flex-col items-center">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gold-primary shadow-[0_0_20px_rgba(197,168,128,0.3)] mb-4">
+              <Image
+                src="/logo.png"
+                alt="Barbearia do Alemão 777"
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+            <span className="text-gold-primary uppercase tracking-[0.3em] text-[10px] font-semibold block mb-1">
               Acesso Privado
             </span>
-            <h2 className="font-serif text-3xl font-black tracking-wide text-white uppercase">
+            <h2 className="font-serif text-2xl font-black tracking-wide text-white uppercase">
               ALEMÃO <span className="text-gold-primary">777</span>
             </h2>
-            <div className="w-12 h-[1px] bg-gold-primary/50 mx-auto mt-4" />
+            <div className="w-12 h-[1px] bg-gold-primary/50 mx-auto mt-3" />
           </div>
 
           {/* Form */}
