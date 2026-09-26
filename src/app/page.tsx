@@ -26,13 +26,6 @@ export default async function Home() {
       durationMin: 30,
     },
     {
-      id: 'default-3',
-      name: 'Combo Completo (Corte + Barba)',
-      description: 'A experiência completa: corte refinado, barba com toalha quente e finalização vip.',
-      price: 70,
-      durationMin: 60,
-    },
-    {
       id: 'default-combo-sobrancelha',
       name: 'Corte + Barba + Sobrancelha (Combo)',
       description: 'Combo completo: corte de cabelo premium, barboterapia relaxante com toalha quente e design de sobrancelha na navalha.',
@@ -70,13 +63,15 @@ export default async function Home() {
     });
 
     if (rawServices && rawServices.length > 0) {
-      services = rawServices.map((service) => ({
-        id: service.id,
-        name: service.name,
-        description: service.description,
-        price: Number(service.price),
-        durationMin: service.durationMin,
-      }));
+      services = rawServices
+        .filter((service) => service.name !== 'Corte + Barba (Combo)' && service.name !== 'Combo Completo (Corte + Barba)')
+        .map((service) => ({
+          id: service.id,
+          name: service.name,
+          description: service.description,
+          price: Number(service.price),
+          durationMin: service.durationMin,
+        }));
     }
 
     const tenant = await prisma.tenant.findFirst();

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, CheckCircle2, User as UserIcon, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { RESPONSE_PROMISE } from '@/lib/site';
 
 interface Service {
   id: string;
@@ -51,6 +52,11 @@ export default function BookingForm({
     }).format(value);
   };
 
+  // Filtrar serviços para excluir o combo simples de corte + barba
+  const availableServices = services.filter(
+    (s) => s.name !== 'Corte + Barba (Combo)' && s.name !== 'Combo Completo (Corte + Barba)'
+  );
+
   // Fetch active barbers on mount
   useEffect(() => {
     const fetchBarber = async () => {
@@ -73,13 +79,13 @@ export default function BookingForm({
   // Pre-select service if passed from parent
   useEffect(() => {
     if (selectedServiceId) {
-      const s = services.find(x => x.id === selectedServiceId);
+      const s = availableServices.find(x => x.id === selectedServiceId);
       if (s) {
         setSelectedServices([s]);
         setStep(2); // Go directly to step 2 (Barber & Time)
       }
     }
-  }, [selectedServiceId, services]);
+  }, [selectedServiceId, availableServices]);
 
   const handleToggleService = (service: Service) => {
     setSelectedServices(prev => {
@@ -296,7 +302,7 @@ export default function BookingForm({
                   </span>
                 </div>
                 <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 scrollbar-none">
-                  {services.map((service) => {
+                  {availableServices.map((service) => {
                     const isSelected = selectedServices.some(s => s.id === service.id);
                     return (
                       <div
@@ -344,7 +350,7 @@ export default function BookingForm({
               <div className="space-y-6">
 
                 {/* Barber Selection */}
-                {barbersList.length > 0 && (
+                {barbersList.length > 1 ? (
                   <div className="space-y-2">
                     <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
                       Escolha o Barbeiro
@@ -378,7 +384,24 @@ export default function BookingForm({
                       })}
                     </div>
                   </div>
-                )}
+                ) : barbersList.length === 1 ? (
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-gold-primary">
+                      Barbeiro Responsável
+                    </label>
+                    <div className="py-3 px-4 border border-gold-primary/40 bg-gold-primary/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <UserIcon className="w-4 h-4 text-gold-primary" />
+                        <span className="text-xs font-bold font-serif uppercase tracking-wider text-white">
+                          {barbersList[0].name}
+                        </span>
+                      </div>
+                      <span className="text-[9px] uppercase px-2 py-0.5 rounded font-semibold bg-gold-primary text-black">
+                        {barbersList[0].role === 'OWNER' ? 'Principal' : 'Barbeiro'}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Date Picker (Horizontal Calendar) */}
                 <div className="space-y-3">
@@ -571,6 +594,9 @@ export default function BookingForm({
                     {loading ? 'Confirmando...' : 'Confirmar'}
                   </button>
                 </div>
+                <p className="text-center text-[10px] text-gold-primary/80 font-semibold uppercase tracking-wider mt-3">
+                  {RESPONSE_PROMISE}
+                </p>
               </div>
             )}
 

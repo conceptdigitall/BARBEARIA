@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Navbar from './Navbar';
 import Hero from './Hero';
 import About from './About';
@@ -10,6 +11,7 @@ import InstagramCarousel from './InstagramCarousel';
 import Services from './Services';
 import BookingForm from './BookingForm';
 import Location from './Location';
+import Faq from './Faq';
 import WhatsAppFloatingButton from './WhatsAppFloatingButton';
 
 interface Service {
@@ -99,6 +101,9 @@ export default function LandingPageWrapper({ services, siteConfig }: LandingPage
       {/* About Us / Philosophy Section (Mapeado por último) */}
       <About />
 
+      {/* Perguntas Frequentes */}
+      <Faq />
+
       {/* Floating WhatsApp Button */}
       <WhatsAppFloatingButton phone={siteConfig.whatsapp} />
 
@@ -148,6 +153,7 @@ export default function LandingPageWrapper({ services, siteConfig }: LandingPage
               <li><a href="#booking" className="hover:text-gold-primary transition-colors">Agendar Horário</a></li>
               <li><a href="#location" className="hover:text-gold-primary transition-colors">Como Chegar</a></li>
               <li><a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-gold-primary transition-colors">Instagram</a></li>
+              <li><Link href="/privacidade" className="hover:text-gold-primary transition-colors">Política de privacidade</Link></li>
               <li><a href="/admin/login" className="text-gold-primary/80 hover:text-gold-primary font-semibold transition-colors">Acesso Administrativo</a></li>
             </ul>
           </div>

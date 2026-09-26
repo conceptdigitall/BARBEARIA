@@ -3,11 +3,27 @@ import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
+// Mesmo formato de src/lib/password.ts (scrypt + salt)
 function hashPassword(password: string) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `scrypt$${salt}$${hash}`;
+}
+
+// Senhas vêm do ambiente; se não vierem, gera aleatórias e mostra UMA vez no terminal.
+function seedPassword(envName: string): string {
+  const fromEnv = process.env[envName];
+  if (fromEnv && fromEnv.length >= 10) return fromEnv;
+  const generated = crypto.randomBytes(9).toString('base64url');
+  console.log(`[seed] ${envName} não definida — senha gerada: ${generated}`);
+  return generated;
 }
 
 async function main() {
+  // O seed APAGA dados. Só roda com confirmação explícita.
+  if (process.env.SEED_CONFIRM !== 'apagar-tudo') {
+    throw new Error('Seed bloqueado: ele apaga agendamentos e clientes. Para rodar mesmo assim: SEED_CONFIRM=apagar-tudo npx prisma db seed');
+  }
   console.log('Cleaning database...');
   // Clear tables in reverse dependency order
   await prisma.availability.deleteMany({});
@@ -41,20 +57,9 @@ async function main() {
     data: {
       name: 'Alemão',
       email: 'alemao@barbearia.com',
-      passwordHash: hashPassword('alemao123'),
+      passwordHash: hashPassword(seedPassword('SEED_OWNER_PASSWORD')),
       role: UserRole.OWNER,
       phone: '+5513974249209',
-      tenantId: tenant.id,
-    },
-  });
-
-  const johann = await prisma.user.create({
-    data: {
-      name: 'Johann',
-      email: 'johann@barbearia.com',
-      passwordHash: hashPassword('johann123'),
-      role: UserRole.BARBER,
-      phone: '+5513999999999',
       tenantId: tenant.id,
     },
   });
@@ -73,13 +78,6 @@ async function main() {
       description: 'Barboterapia com toalha quente, óleo pré-shave, espuma aquecida e pós-barba hidratante.',
       price: 40.00,
       durationMin: 30,
-      tenantId: tenant.id,
-    },
-    {
-      name: 'Corte + Barba (Combo)',
-      description: 'A experiência completa: corte de cabelo premium e barboterapia relaxante com toalha quente.',
-      price: 75.00,
-      durationMin: 60,
       tenantId: tenant.id,
     },
     {
@@ -112,7 +110,7 @@ async function main() {
   console.log('Creating Availabilities...');
   // Monday (1) to Saturday (6)
   const days = [1, 2, 3, 4, 5, 6];
-  for (const barber of [alemao, johann]) {
+  for (const barber of [alemao]) {
     for (const day of days) {
       await prisma.availability.create({
         data: {
@@ -156,7 +154,6 @@ async function main() {
   const dbServices = await prisma.service.findMany({ where: { tenantId: tenant.id } });
   const sCorte = dbServices.find((s) => s.name === 'Corte')!;
   const sBarba = dbServices.find((s) => s.name === 'Barba')!;
-  const sCombo = dbServices.find((s) => s.name === 'Corte + Barba (Combo)')!;
   const sComboCompleto = dbServices.find((s) => s.name === 'Corte + Barba + Sobrancelha (Combo)')!;
   const sPezinho = dbServices.find((s) => s.name === 'Pezinho')!;
 
@@ -172,46 +169,46 @@ async function main() {
   const appointmentsList = [
     // HOJE (24/09)
     { clientIdx: 0, barber: alemao, service: sCorte, dateTime: createDate(0, 14, 0), status: 'CONFIRMED' as const },
-    { clientIdx: 1, barber: johann, service: sComboCompleto, dateTime: createDate(0, 15, 30), status: 'CONFIRMED' as const },
+    { clientIdx: 1, barber: alemao, service: sComboCompleto, dateTime: createDate(0, 15, 30), status: 'CONFIRMED' as const },
     { clientIdx: 2, barber: alemao, service: sBarba, dateTime: createDate(0, 17, 0), status: 'PENDING_CONFIRMATION' as const },
-    { clientIdx: 3, barber: johann, service: sCombo, dateTime: createDate(0, 18, 0), status: 'CONFIRMED' as const },
+    { clientIdx: 3, barber: alemao, service: sComboCompleto, dateTime: createDate(0, 18, 0), status: 'CONFIRMED' as const },
 
     // ONTEM (23/09)
     { clientIdx: 4, barber: alemao, service: sComboCompleto, dateTime: createDate(1, 10, 0), status: 'COMPLETED' as const },
-    { clientIdx: 5, barber: johann, service: sCorte, dateTime: createDate(1, 14, 30), status: 'COMPLETED' as const },
+    { clientIdx: 5, barber: alemao, service: sCorte, dateTime: createDate(1, 14, 30), status: 'COMPLETED' as const },
     { clientIdx: 6, barber: alemao, service: sBarba, dateTime: createDate(1, 16, 0), status: 'COMPLETED' as const },
 
     // 22/09 (2 dias atrás)
-    { clientIdx: 7, barber: johann, service: sCombo, dateTime: createDate(2, 11, 0), status: 'COMPLETED' as const },
+    { clientIdx: 7, barber: alemao, service: sComboCompleto, dateTime: createDate(2, 11, 0), status: 'COMPLETED' as const },
     { clientIdx: 8, barber: alemao, service: sCorte, dateTime: createDate(2, 15, 0), status: 'COMPLETED' as const },
 
     // 21/09 (3 dias atrás)
-    { clientIdx: 9, barber: johann, service: sComboCompleto, dateTime: createDate(3, 16, 30), status: 'COMPLETED' as const },
+    { clientIdx: 9, barber: alemao, service: sComboCompleto, dateTime: createDate(3, 16, 30), status: 'COMPLETED' as const },
     { clientIdx: 0, barber: alemao, service: sPezinho, dateTime: createDate(3, 18, 0), status: 'COMPLETED' as const },
 
     // 20/09 (4 dias atrás)
     { clientIdx: 1, barber: alemao, service: sBarba, dateTime: createDate(4, 14, 0), status: 'COMPLETED' as const },
-    { clientIdx: 2, barber: johann, service: sCorte, dateTime: createDate(4, 17, 0), status: 'COMPLETED' as const },
+    { clientIdx: 2, barber: alemao, service: sCorte, dateTime: createDate(4, 17, 0), status: 'COMPLETED' as const },
 
     // 18/09 (6 dias atrás)
     { clientIdx: 3, barber: alemao, service: sComboCompleto, dateTime: createDate(6, 15, 0), status: 'COMPLETED' as const },
 
     // 15/09 (9 dias atrás)
-    { clientIdx: 4, barber: johann, service: sCorte, dateTime: createDate(9, 11, 0), status: 'COMPLETED' as const },
-    { clientIdx: 5, barber: alemao, service: sCombo, dateTime: createDate(9, 16, 0), status: 'COMPLETED' as const },
+    { clientIdx: 4, barber: alemao, service: sCorte, dateTime: createDate(9, 11, 0), status: 'COMPLETED' as const },
+    { clientIdx: 5, barber: alemao, service: sComboCompleto, dateTime: createDate(9, 16, 0), status: 'COMPLETED' as const },
 
     // 08/09 (16 dias atrás -> RETORNO DEVIDO!)
     { clientIdx: 6, barber: alemao, service: sComboCompleto, dateTime: createDate(16, 14, 0), status: 'COMPLETED' as const },
 
     // 04/09 (20 dias atrás -> RETORNO DEVIDO!)
-    { clientIdx: 7, barber: johann, service: sCorte, dateTime: createDate(20, 10, 0), status: 'COMPLETED' as const },
+    { clientIdx: 7, barber: alemao, service: sCorte, dateTime: createDate(20, 10, 0), status: 'COMPLETED' as const },
 
     // 01/09 (23 dias atrás -> RETORNO DEVIDO!)
-    { clientIdx: 8, barber: alemao, service: sCombo, dateTime: createDate(23, 16, 0), status: 'COMPLETED' as const },
+    { clientIdx: 8, barber: alemao, service: sComboCompleto, dateTime: createDate(23, 16, 0), status: 'COMPLETED' as const },
 
     // Clientes VIPs (3+ visitas)
     { clientIdx: 0, barber: alemao, service: sComboCompleto, dateTime: createDate(30, 14, 0), status: 'COMPLETED' as const },
-    { clientIdx: 1, barber: johann, service: sComboCompleto, dateTime: createDate(32, 15, 0), status: 'COMPLETED' as const },
+    { clientIdx: 1, barber: alemao, service: sComboCompleto, dateTime: createDate(32, 15, 0), status: 'COMPLETED' as const },
   ];
 
   for (const app of appointmentsList) {

@@ -103,7 +103,6 @@ export async function GET(request: Request) {
       selectedBarberId: 'ce544982-f443-43fe-a794-353c3bd5e040',
       barbers: [
         { id: 'ce544982-f443-43fe-a794-353c3bd5e040', name: 'Alemão', role: 'OWNER' },
-        { id: 'e77f53ab-57b9-4b78-8aa8-84e2a8492abd', name: 'Johann', role: 'BARBER' },
       ],
       availabilities: DEFAULT_DAYS,
       isDegraded: true,

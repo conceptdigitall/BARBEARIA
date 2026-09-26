@@ -1,6 +1,31 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+const SECRET_KEYS = ['accessToken', 'apiKey', 'appSecret', 'token', 'secret'];
+const MASK = '••••••••••••••••';
+
+/** Nunca devolve chaves/tokens reais para o navegador. */
+function maskSecrets<T>(obj: T): T {
+  if (!obj || typeof obj !== 'object') return obj;
+  const out: Record<string, unknown> = Array.isArray(obj) ? ([...obj] as unknown as Record<string, unknown>) : { ...(obj as Record<string, unknown>) };
+  for (const [k, v] of Object.entries(out)) {
+    if (SECRET_KEYS.includes(k) && typeof v === 'string' && v) out[k] = MASK;
+    else if (v && typeof v === 'object') out[k] = maskSecrets(v);
+  }
+  return out as T;
+}
+
+/** Se o painel mandar de volta o valor mascarado, mantém o segredo que já estava salvo. */
+function keepMaskedSecrets(incoming: any, current: any): any {
+  if (!incoming || typeof incoming !== 'object') return incoming;
+  const out: any = Array.isArray(incoming) ? [...incoming] : { ...incoming };
+  for (const [k, v] of Object.entries(out)) {
+    if (SECRET_KEYS.includes(k) && typeof v === 'string' && v.includes('•')) out[k] = current?.[k] ?? '';
+    else if (v && typeof v === 'object') out[k] = keepMaskedSecrets(v, current?.[k]);
+  }
+  return out;
+}
+
 export async function GET() {
   try {
     const tenant = await prisma.tenant.findFirst();
@@ -8,7 +33,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Tenant não encontrado' }, { status: 404 });
     }
 
-    const config = (tenant.themeConfig as Record<string, any>) || {};
+    const config = maskSecrets((tenant.themeConfig as Record<string, any>) || {});
 
     return NextResponse.json({
       success: true,
@@ -36,13 +61,13 @@ export async function GET() {
             id: '1',
             title: 'Tabela de Serviços e Preços',
             content:
-              'Corte: R$ 40,00 | Barba com toalha quente: R$ 35,00 | Combo Corte + Barba: R$ 75,00 | Combo Completo (Corte + Barba + Sobrancelha): R$ 90,00 | Sobrancelha na navalha: R$ 20,00 | Pezinho: R$ 15,00. Pagamentos: Pix, Dinheiro, Cartões de Débito e Crédito.',
+              'Corte: R$ 40,00 | Barba com toalha quente: R$ 35,00 | Combo Completo (Corte + Barba + Sobrancelha): R$ 90,00 | Sobrancelha na navalha: R$ 20,00 | Pezinho: R$ 15,00. Pagamentos: Pix, Dinheiro, Cartões de Débito e Crédito.',
           },
           {
             id: '2',
             title: 'Horário de Funcionamento & Localização',
             content:
-              'Segunda a Sábado, das 09:00 às 19:00. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão/SP. Barbeiros: Kawe (Alemão) e Johann.',
+              'Segunda a Sábado, das 09:00 às 19:00. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão/SP. Barbeiro: Kawe (Alemão).',
           },
           {
             id: '3',
@@ -72,8 +97,8 @@ export async function POST(request: Request) {
     const currentThemeConfig = (tenant.themeConfig as Record<string, any>) || {};
     const updatedThemeConfig = {
       ...currentThemeConfig,
-      ...(whatsappConfig ? { whatsappConfig } : {}),
-      ...(aiConfig ? { aiConfig } : {}),
+      ...(whatsappConfig ? { whatsappConfig: keepMaskedSecrets(whatsappConfig, currentThemeConfig.whatsappConfig) } : {}),
+      ...(aiConfig ? { aiConfig: keepMaskedSecrets(aiConfig, currentThemeConfig.aiConfig) } : {}),
     };
 
     const updatedTenant = await prisma.tenant.update({
@@ -85,7 +110,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      tenant: updatedTenant,
+      tenant: { ...updatedTenant, themeConfig: maskSecrets(updatedTenant.themeConfig) },
       message: 'Configurações do CRM salvas com sucesso',
     });
   } catch (error) {

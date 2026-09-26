@@ -146,8 +146,8 @@ export function SettingsOverviewPanel({
               <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Membros da equipe
               </h4>
-              <p className="mt-1 text-xs text-slate-500">2 membros</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Kawe Alemão, Johann</p>
+              <p className="mt-1 text-xs text-slate-500">1 membro</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Kawe Alemão</p>
             </div>
           </div>
           <ChevronRight className="h-4 w-4 text-slate-400 mt-1 shrink-0" />

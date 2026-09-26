@@ -2042,7 +2042,7 @@ export default function AdminDashboard({ initialAppointments, tenant, views }: A
                   </div>
                   <h4 className="font-bold text-sm">Assistente de Recepção</h4>
                   <p className="text-xs text-slate-500 mt-1">
-                    Sugere horários livres com base na disponibilidade em tempo real dos barbeiros Alemão e Johann.
+                    Sugere horários livres com base na disponibilidade em tempo real do barbeiro Alemão.
                   </p>
                 </div>
               </div>

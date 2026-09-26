@@ -1,11 +1,18 @@
 import { AppointmentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { getSessionUser } from '@/lib/auth';
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Só a equipe logada pode mudar o status de um agendamento.
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();

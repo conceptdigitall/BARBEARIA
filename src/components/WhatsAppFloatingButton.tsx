@@ -1,15 +1,27 @@
 'use client';
 
+import { openWhatsApp } from '@/lib/whatsapp';
+
 export default function WhatsAppFloatingButton({ phone }: { phone: string }) {
   const cleanPhone = phone.replace(/\D/g, '');
   const message = 'Olá! Gostaria de agendar um horário na Barbearia do Alemão.';
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Clique simples: abre o WhatsApp numa aba nova e leva esta aba para /obrigado.
+    // Ctrl/Cmd/clique do meio seguem o comportamento padrão do navegador (abrir em nova aba).
+    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      openWhatsApp(phone, message);
+    }
+  };
 
   return (
     <a
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20ba5a] text-white p-4 rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.35)] hover:shadow-[0_4px_30px_rgba(37,211,102,0.55)] transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer border border-white/10 group active:scale-95"
       title="Fale Conosco no WhatsApp"
       aria-label="Fale Conosco no WhatsApp"

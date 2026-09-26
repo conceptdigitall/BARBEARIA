@@ -18,15 +18,6 @@ export function MembersPanel({ isDark }: MembersPanelProps) {
       initial: 'K',
       status: 'Ativo',
     },
-    {
-      id: '2',
-      name: 'Johann',
-      email: 'johann@barbearia.com',
-      role: 'BARBEIRO',
-      isOwner: false,
-      initial: 'J',
-      status: 'Ativo',
-    },
   ];
 
   return (

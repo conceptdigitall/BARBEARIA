@@ -1,10 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 
-const FALLBACK_DATABASE_URL =
-  'mysql://urxeqfgitchopiau:HovIXB7MJWsJei7XaB68@bzp6k1mpnkmh2iffbmvh-mysql.services.clever-cloud.com:3306/bzp6k1mpnkmh2iffbmvh?connection_limit=1&pool_timeout=10&connect_timeout=10';
-
+// A URL do banco vem SÓ da variável de ambiente DATABASE_URL (Vercel / .env local).
+// Nunca coloque credenciais no código.
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = FALLBACK_DATABASE_URL;
+  console.error('[Prisma] DATABASE_URL não configurada.');
 }
 
 declare global {
@@ -15,7 +14,7 @@ declare global {
 export const prisma =
   globalThis.prisma ||
   new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL || FALLBACK_DATABASE_URL,
+    datasourceUrl: process.env.DATABASE_URL,
     log: ['error'],
   });
 

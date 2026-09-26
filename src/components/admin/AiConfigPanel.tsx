@@ -40,7 +40,7 @@ export function AiConfigPanel({ isDark, onSaveSuccess }: AiConfigPanelProps) {
   const [maxMessages, setMaxMessages] = useState(3);
 
   const [systemPrompt, setSystemPrompt] = useState(
-    'Você é o assistente virtual oficial da Barbearia do Alemão 777 em Cubatão/SP, liderada pelo barbeiro Kawe (Alemão) e Johann. Atenda os clientes de forma descontraída, ágil e educada (estilo barbearia urbana). Ajude com dúvidas sobre preços (Corte R$ 40, Barba R$ 35, Combo Completo R$ 90), horários disponíveis (Seg a Sáb 09h às 19h) e localização (Rua Espanha, 360 - Jd. Casqueiro). Se o cliente desejar falar com o barbeiro ou agendar um horário personalizado, forneça o link do site ou transfira para o Kawe.'
+    'Você é o assistente virtual oficial da Barbearia do Alemão 777 em Cubatão/SP, liderada pelo barbeiro Kawe (Alemão). Atenda os clientes de forma descontraída, ágil e educada (estilo barbearia urbana). Ajude com dúvidas sobre preços (Corte R$ 40, Barba R$ 35, Combo Completo R$ 90), horários disponíveis (Seg a Sáb 09h às 19h) e localização (Rua Espanha, 360 - Jd. Casqueiro). Se o cliente desejar falar com o barbeiro ou agendar um horário personalizado, forneça o link do site ou transfira para o Kawe.'
   );
 
   const [knowledgeList, setKnowledgeList] = useState<AiKnowledgeItem[]>([
@@ -48,13 +48,13 @@ export function AiConfigPanel({ isDark, onSaveSuccess }: AiConfigPanelProps) {
       id: '1',
       title: 'Tabela de Serviços e Preços',
       content:
-        'Corte Masculino: R$ 40,00 | Barboterapia com toalha quente: R$ 35,00 | Combo Corte + Barba: R$ 75,00 | Combo Completo (Corte + Barba + Sobrancelha): R$ 90,00 | Design de Sobrancelha na navalha: R$ 20,00 | Pezinho/Acabamento: R$ 15,00. Formas de pagamento: Pix, Cartão de Débito, Cartão de Crédito e Dinheiro.',
+        'Corte Masculino: R$ 40,00 | Barboterapia com toalha quente: R$ 35,00 | Combo Completo (Corte + Barba + Sobrancelha): R$ 90,00 | Design de Sobrancelha na navalha: R$ 20,00 | Pezinho/Acabamento: R$ 15,00. Formas de pagamento: Pix, Cartão de Débito, Cartão de Crédito e Dinheiro.',
     },
     {
       id: '2',
       title: 'Horário de Funcionamento & Localização',
       content:
-        'Segunda a Sábado, das 09:00 às 19:00. Fechado aos Domingos e Feriados. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão/SP. Barbeiros: Kawe (Alemão) e Johann. WhatsApp: +55 (13) 97424-9209.',
+        'Segunda a Sábado, das 09:00 às 19:00. Fechado aos Domingos e Feriados. Endereço: Rua Espanha, 360 - Jardim Casqueiro, Cubatão/SP. Barbeiro: Kawe (Alemão). WhatsApp: +55 (13) 97424-9209.',
     },
     {
       id: '3',
@@ -348,7 +348,7 @@ export function AiConfigPanel({ isDark, onSaveSuccess }: AiConfigPanelProps) {
             type="button"
             onClick={() =>
               setSystemPrompt(
-                'Você é o assistente virtual oficial da Barbearia do Alemão 777 em Cubatão/SP, liderada pelo barbeiro Kawe (Alemão) e Johann. Atenda os clientes de forma descontraída, ágil e educada (estilo barbearia urbana). Ajude com dúvidas sobre preços (Corte R$ 40, Barba R$ 35, Combo Completo R$ 90), horários disponíveis (Seg a Sáb 09h às 19h) e localização (Rua Espanha, 360 - Jd. Casqueiro). Se o cliente desejar falar com o barbeiro ou agendar um horário personalizado, forneça o link do site ou transfira para o Kawe.'
+                'Você é o assistente virtual oficial da Barbearia do Alemão 777 em Cubatão/SP, liderada pelo barbeiro Kawe (Alemão). Atenda os clientes de forma descontraída, ágil e educada (estilo barbearia urbana). Ajude com dúvidas sobre preços (Corte R$ 40, Barba R$ 35, Combo Completo R$ 90), horários disponíveis (Seg a Sáb 09h às 19h) e localização (Rua Espanha, 360 - Jd. Casqueiro). Se o cliente desejar falar com o barbeiro ou agendar um horário personalizado, forneça o link do site ou transfira para o Kawe.'
               )
             }
             className="text-[11px] text-[#C5A880] hover:underline font-semibold"
